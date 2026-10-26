@@ -1,8 +1,20 @@
 # FaultLine
 
-FaultLine is a small tool that runs in your browser. It walks you from reading a chatbot's answers to one screen that says where to act: fix the chatbot, or fix the automatic checker (the "judge") that is scoring it.
+**Live demo:** https://rishendra125.github.io/faultline_project/demo.html  
+**Case study:** https://rishendra125.github.io/faultline_project/
 
-**Live demo:** https://rishendra125.github.io/faultline_project/demo.html
+## Why AI evals matter for product managers
+
+When a chatbot gives wrong answers, there are two possible causes. The chatbot itself is producing bad outputs, or the automatic checker (the judge) that is supposed to catch bad outputs is wrong. The fix is different in each case. Fixing the chatbot when the judge is the problem wastes engineering time and changes nothing for the user. Fixing the judge when the chatbot is the problem means bad answers keep shipping.
+
+AI evals is the discipline of measuring how well an AI system performs and deciding what to do when it does not perform well enough. For a product manager, evals answer a specific question: is this a product problem or a measurement problem? FaultLine is built around that question.
+
+## AI evals concepts this tool uses
+
+- **Trace analysis** (screen 1): a trace is one input-output pair, one question and one bot answer. Reading traces against a known fact sheet and writing a note on each failure is the starting point of any evals process.
+- **Axial coding** (screen 2): after reading, the notes are grouped into named failure categories. This turns a list of individual observations into a short set of named problem types that can go into a judge's instructions.
+- **LLM as judge** (screen 3): a language model reads a written brief and scores each answer good or bad. The brief holds the fact sheet, the rules for judging, and the named problem groups. Improving the brief improves the judge.
+- **Confusion matrix** (screen 4): every answer lands in one of four boxes by comparing the judge's verdict with the human label. The boxes tell you where to act: fix the chatbot, fix the judge, or do nothing.
 
 ![FaultLine start screen](screenshots/Start%20Here.jpeg)
 *Start here: the four boxes explained before the tour begins*
