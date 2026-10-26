@@ -2,6 +2,8 @@
 
 FaultLine is a small tool that runs in your browser. It walks you from reading a chatbot's answers to one screen that says where to act: fix the chatbot, or fix the automatic checker (the "judge") that is scoring it.
 
+**Live demo:** https://rishendra125.github.io/faultline_project/demo.html
+
 ![FaultLine start screen](screenshots/Start%20Here.jpeg)
 *Start here: the four boxes explained before the tour begins*
 
