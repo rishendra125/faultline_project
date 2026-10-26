@@ -1,0 +1,66 @@
+{
+  "synthetic": true,
+  "synthetic_notice": "SYNTHETIC. Every number and rule here is invented for a demo. It does not describe any real wallet, bank or regulator.",
+  "version": "1.1.0",
+  "app_name": "PocketLoop",
+  "currency": { "code": "LC", "name": "loop credits" },
+  "tiers": {
+    "basic": {
+      "per_transaction_limit_lc": 500,
+      "daily_limit_lc": 1000,
+      "monthly_limit_lc": 4000,
+      "monthly_transfer_count_cap": 20,
+      "wallet_balance_cap_lc": 2000,
+      "transfer_fee": "1.5 percent, minimum 2 LC",
+      "upgrade_path": "Complete KYC-01, KYC-02 and KYC-03 to become verified."
+    },
+    "verified": {
+      "per_transaction_limit_lc": 3000,
+      "daily_limit_lc": 8000,
+      "monthly_limit_lc": 30000,
+      "monthly_transfer_count_cap": 60,
+      "wallet_balance_cap_lc": 15000,
+      "transfer_fee": "0.8 percent, minimum 1 LC",
+      "upgrade_path": "Complete KYC-04 and KYC-05 to become premium."
+    },
+    "premium": {
+      "per_transaction_limit_lc": 20000,
+      "daily_limit_lc": 50000,
+      "monthly_limit_lc": 200000,
+      "monthly_transfer_count_cap": 200,
+      "wallet_balance_cap_lc": 100000,
+      "transfer_fee": "0.3 percent, maximum 25 LC",
+      "upgrade_path": "Premium is the top tier."
+    }
+  },
+  "rules": [
+    { "id": "LIM-01", "area": "limits", "text": "Each tier has a maximum amount per single transaction (basic 500 LC, verified 3000 LC, premium 20000 LC)." },
+    { "id": "LIM-02", "area": "limits", "text": "Each tier has a daily sending limit (basic 1000 LC, verified 8000 LC, premium 50000 LC). It resets at 00:00 UTC every day." },
+    { "id": "LIM-03", "area": "limits", "text": "Each tier has a monthly sending limit (basic 4000 LC, verified 30000 LC, premium 200000 LC). The month is a calendar month, not a rolling 30 days. It resets at 00:00 UTC on the first day of each calendar month." },
+    { "id": "LIM-04", "area": "limits", "text": "Each tier has a cap on the number of transfers per calendar month (basic 20, verified 60, premium 200). The count restarts on the first day of each calendar month." },
+    { "id": "LIM-05", "area": "limits", "text": "Each tier has a wallet balance cap (basic 2000 LC, verified 15000 LC, premium 100000 LC). An incoming payment that would pass the cap is declined and returned to the sender." },
+    { "id": "LIM-06", "area": "limits", "text": "When a sending limit is reached, new transfers are blocked until the limit resets. Receiving money still works, up to the balance cap." },
+    { "id": "LIM-07", "area": "limits", "text": "A temporary limit increase is open to verified and premium users only. It can be requested once per calendar month in the app. It raises the monthly sending limit (LIM-03) by up to 25 percent for 7 days. It does not change the per transaction limit, the daily limit, the transfer count cap or the balance cap. Basic users cannot request it." },
+    { "id": "FEE-01", "area": "fees", "text": "Transfer fees: basic 1.5 percent with a 2 LC minimum, verified 0.8 percent with a 1 LC minimum, premium 0.3 percent with a 25 LC maximum." },
+    { "id": "FEE-02", "area": "fees", "text": "If a payment fails, its fee is reversed together with the amount. Fees on completed payments are not refunded." },
+    { "id": "KYC-01", "area": "kyc", "text": "Basic to verified, step 1: confirm your phone number by typing the 6-digit code the app sends you, inside the app." },
+    { "id": "KYC-02", "area": "kyc", "text": "Basic to verified, step 2: upload a photo of a national ID card or a passport. Driving permits are not accepted." },
+    { "id": "KYC-03", "area": "kyc", "text": "Basic to verified, step 3: take a live selfie in the app. Review takes 1 to 2 business days." },
+    { "id": "KYC-04", "area": "kyc", "text": "Verified to premium, step 1: upload proof of address dated within the last 90 days." },
+    { "id": "KYC-05", "area": "kyc", "text": "Verified to premium, step 2: fill in the source of funds form in the app. Review takes 3 to 5 business days." },
+    { "id": "KYC-06", "area": "kyc", "text": "Common rejection reasons: blurry image, expired ID, name does not match the account, selfie does not match the ID photo." },
+    { "id": "KYC-07", "area": "kyc", "text": "After a rejection the user can resubmit right after fixing the problem. A user gets at most 3 attempts in a 30 day window, which starts at the first attempt. After the third rejection the user is locked from KYC for 14 days and can contact a human agent about the case. When the lock ends, the attempt count restarts at zero and a new 30 day window begins with 3 new attempts." },
+    { "id": "FAIL-01", "area": "failed_payments", "text": "A payment shows one of three statuses: Pending, Completed or Failed. Pending can last up to 24 hours." },
+    { "id": "FAIL-02", "area": "failed_payments", "text": "If money was taken but the payment shows Failed, it is reversed automatically to its source. Wallet balance: within 1 business day. Linked bank account: within 5 business days." },
+    { "id": "FAIL-03", "area": "failed_payments", "text": "If a payment is still Pending after 24 hours, or a reversal is late, the user should open the payment and tap Report a problem." },
+    { "id": "FAIL-04", "area": "failed_payments", "text": "PocketLoop does not refund Completed payments to merchants. The user should ask the merchant first. If the merchant does not help, the user can open a dispute within 30 days of the payment." },
+    { "id": "FAIL-05", "area": "failed_payments", "text": "A dispute is reviewed within 10 business days and ends in one of two outcomes: upheld or rejected. The outcome is not promised in advance, and the bot must not predict it." },
+    { "id": "FAIL-06", "area": "failed_payments", "text": "If a dispute is upheld, the payment amount is returned to the user's wallet balance, not to a bank account, within 2 business days of the decision. The transfer fee is not returned. If a dispute is rejected, there is no refund, and the user can appeal once within 7 days by adding new evidence. Disputes cover payments to merchants only, not transfers to other people." },
+    { "id": "FAIL-07", "area": "failed_payments", "text": "Money sent to the wrong person by the user cannot be pulled back by PocketLoop. The user can ask the receiver to send it back." },
+    { "id": "SEC-01", "area": "security", "text": "Support and the support bot never ask for a one time code, PIN, password or full card number." },
+    { "id": "SEC-02", "area": "security", "text": "If a user has shared a code, PIN or password with anyone, the bot should tell them to change their PIN in the app and tap Report a problem right away." },
+    { "id": "BOT-01", "area": "bot_scope", "text": "The bot cannot see balances, payments or account details, and cannot change anything on an account." },
+    { "id": "BOT-02", "area": "bot_scope", "text": "For account specific problems, the bot sends the user to Report a problem in the app. A human agent replies within 1 business day." },
+    { "id": "BOT-03", "area": "bot_scope", "text": "The bot must not state a fact, number, date or promise that is not in this fact sheet. If it does not know, it says so and points to Report a problem." }
+  ]
+}

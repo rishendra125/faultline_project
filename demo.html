@@ -1,0 +1,2385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PocketLoop FaultLine Demo</title>
+<style>
+:root{
+  --bg:#f5f6f8;--surface:#ffffff;--surface2:#eef1f5;--text:#1a1f26;--muted:#566170;--border:#d3d9e0;
+  --accent:#2152c4;--accent-text:#ffffff;--pass:#17703f;--pass-bg:#e1f3e8;--fail:#a82430;--fail-bg:#fbe6e8;
+  --warn-bg:#fff2cc;--warn-text:#533d00;--warn-border:#e3c460;--err-bg:#fbe6e8;--err-text:#7a1620;--focus:#1a6bff;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#12161b;--surface:#1b2128;--surface2:#242c35;--text:#e8ecf1;--muted:#a3adba;--border:#37414d;
+    --accent:#7aa2ff;--accent-text:#0b1220;--pass:#58cf8c;--pass-bg:#173626;--fail:#ff8a93;--fail-bg:#3d1c20;
+    --warn-bg:#3a3010;--warn-text:#f1dd9a;--warn-border:#7a6620;--err-bg:#3d1c20;--err-text:#ffc4c9;--focus:#8fb2ff;
+  }
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--surface);padding:8px;z-index:50}
+.skip:focus{left:8px;top:8px}
+header.top{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.brand{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.badge.syn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border)}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px}
+button,.btn,select,input,textarea{font:inherit;color:inherit}
+button,.btn{cursor:pointer;border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 12px;min-height:38px}
+button:hover:not(:disabled){background:var(--surface2)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+button.primary:hover:not(:disabled){background:var(--accent);filter:brightness(1.08)}
+nav.strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.steplabel{font-weight:700;margin-right:4px}
+button.step{font-size:.9rem}
+button.step.done{border-color:var(--pass);color:var(--pass)}
+button.step.current{border:2px solid var(--accent);font-weight:700}
+button.step.later{border-style:dashed;color:var(--muted)}
+.st{font-size:.75rem;margin-left:6px;font-weight:600}
+.help{min-width:34px;min-height:34px;padding:0;border-radius:999px;font-weight:700}
+.bigbtn{font-size:1.15rem;padding:14px 22px;min-height:52px}
+.linkbtn{background:none;border:none;color:var(--accent);text-decoration:underline;min-height:0;padding:6px}
+.linkbtn:hover:not(:disabled){background:none}
+.tourbar{padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tourbar[hidden]{display:none}
+.guide{border-left:4px solid var(--accent);background:var(--surface2);padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0 8px}
+.guide strong{font-size:.85rem}
+.guide p{margin:4px 0}
+.startpic{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:16px;align-items:center;margin:16px 0}
+.three{font-size:1.1rem;padding-left:24px;margin:12px 0}
+.three li{margin:6px 0}
+.legend4{list-style:none;padding:0;margin:0}
+.legend4 li{margin:6px 0}
+@media (max-width:860px){ .startpic{grid-template-columns:minmax(0,1fr)} }
+.tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px}
+.banner{padding:10px 16px;border-bottom:1px solid var(--warn-border);background:var(--warn-bg);color:var(--warn-text)}
+.banner.err{background:var(--err-bg);color:var(--err-text);border-color:var(--err-text)}
+.banner button{margin-left:8px}
+main{max-width:1240px;margin:0 auto;padding:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin:0 0 16px}
+.card h2,.card h3{margin:0 0 8px}
+.card h2{font-size:1.15rem}
+.card h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,430px);gap:16px;align-items:start}
+.side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);font-size:.8rem}
+.qa p{margin:0 0 12px;padding:10px 12px;background:var(--surface2);border-radius:8px;white-space:pre-wrap}
+.choice{min-width:96px;font-weight:600}
+.choice[aria-pressed="true"].pass{background:var(--pass-bg);border-color:var(--pass);color:var(--pass)}
+.choice[aria-pressed="true"].fail{background:var(--fail-bg);border-color:var(--fail);color:var(--fail)}
+input[type=text],textarea,select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+input[type=range]{width:100%}
+label{display:block;font-weight:600;margin:10px 0 4px}
+.note-hint{font-size:.85rem;color:var(--muted);margin-top:4px}
+.reveal{border-left:4px solid var(--accent);padding:8px 12px;background:var(--surface2);border-radius:0 8px 8px 0;margin:12px 0}
+.label-pass{color:var(--pass);font-weight:700}
+.label-fail{color:var(--fail);font-weight:700}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:4px}
+#grid button{padding:0;min-height:34px;font-size:.75rem;font-weight:700;border-radius:6px}
+#grid button.pass{background:var(--pass-bg);color:var(--pass);border-color:var(--pass)}
+#grid button.fail{background:var(--fail-bg);color:var(--fail);border-color:var(--fail)}
+#grid button.sample{border-style:dashed}
+#grid button.cur{outline:3px solid var(--focus);outline-offset:1px}
+.legend{font-size:.8rem;color:var(--muted);margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+dl.rules{margin:0}
+dl.rules dt{font-weight:700;font-size:.8rem;margin-top:8px;color:var(--accent)}
+dl.rules dd{margin:0 0 4px;font-size:.9rem}
+.area{margin:14px 0 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border)}
+.flag{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;background:var(--warn-bg);color:var(--warn-text);border:1px solid var(--warn-border)}
+.flag.bad{background:var(--fail-bg);color:var(--fail);border-color:var(--fail)}
+.flag.ok{background:var(--pass-bg);color:var(--pass);border-color:var(--pass)}
+.gcard{border:1px solid var(--border);border-radius:10px;padding:12px;margin:0 0 12px;background:var(--surface)}
+.gcard.locked{background:var(--surface2)}
+.noterow{display:grid;grid-template-columns:70px minmax(0,1fr) 170px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)}
+.noterow .idlink{background:none;border:none;color:var(--accent);padding:0;min-height:0;text-decoration:underline;text-align:left}
+details>summary{cursor:pointer;font-weight:600}
+dialog{border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);max-width:560px;width:calc(100% - 32px);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.chartwrap svg{width:100%;height:auto;display:block}
+.chartwrap text{fill:var(--muted);font-size:11px}
+.sr{position:absolute;left:-999px;width:1px;height:1px;overflow:hidden}
+.testbadge{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--fail-bg);color:var(--fail);border:1px solid var(--fail)}
+textarea.prompt{font-family:ui-monospace,Consolas,monospace;font-size:.8rem;min-height:260px}
+.matrix{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:16px}
+.axis{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;color:var(--muted);font-size:.9rem}
+.box{border:1px solid var(--border);border-top-width:6px;border-radius:10px;padding:12px;background:var(--surface)}
+.box.bot{border-top-color:var(--fail)}
+.box.judge{border-top-color:#c98a00}
+.box.ok{border-top-color:var(--pass)}
+.box h3{margin:0 0 2px;text-transform:none;letter-spacing:0;font-size:1rem;color:var(--text)}
+.box .big{font-size:1.8rem;font-weight:700;line-height:1.1}
+.idlist{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.idlist button{min-height:30px;padding:2px 8px;font-size:.8rem}
+.stepno{display:inline-block;min-width:26px;text-align:center;font-weight:700;color:var(--accent-text);background:var(--accent);border-radius:999px;margin-right:6px}
+@media (max-width:860px){
+  .matrix{grid-template-columns:minmax(0,1fr)}
+  .axis{display:none}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;max-height:none}
+  .tools{margin-left:0}
+  .noterow{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="brand">
+    <strong>PocketLoop FaultLine</strong>
+    <span class="badge syn">SYNTHETIC DATA</span>
+    <span class="badge">Demo mode</span>
+  </div>
+  <nav class="strip" aria-label="Progress">
+    <span id="stepLabel" class="steplabel"></span>
+    <button class="tab step" data-screen="review"><span>1. Review answers</span><span class="st"></span></button>
+    <button class="tab step" data-screen="groups"><span>2. Group the problems</span><span class="st"></span></button>
+    <button class="tab step" data-screen="judge"><span>3. Test an automatic checker</span><span class="st"></span></button>
+    <button class="tab step" data-screen="fix"><span>4. Where to fix</span><span class="st"></span></button>
+  </nav>
+  <div class="tools">
+    <button id="btnStartLink" class="linkbtn">Start here</button>
+    <button id="btnExport">Download my work</button>
+    <label class="btn" for="fileImport" style="margin:0;font-weight:400">Load my work</label>
+    <input id="fileImport" type="file" accept="application/json,.json" class="sr">
+    <button id="btnReset">Start over</button>
+  </div>
+</header>
+<div id="sampleBanner" class="banner" role="status" hidden></div>
+<div id="tourBar" class="tourbar" hidden><span id="tourText"></span><button id="btnLeaveTour" class="linkbtn">Leave the tour</button></div>
+<div id="loadError" class="banner err" role="alert" hidden></div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<main id="main">
+
+<!-- START PAGE: what the tool does in three lines, a picture of the four boxes, and the tour button -->
+<section id="screen-start" hidden aria-label="Start here">
+  <div class="card">
+    <h2 style="font-size:1.5rem">Find out whether to fix the chatbot or fix the checker</h2>
+    <ol class="three">
+      <li>A chatbot for a made-up payments app answered 120 questions, and some of its answers are wrong.</li>
+      <li>You mark the answers good or bad, group the problems, and test an automatic checker (a judge) that tries to spot the bad answers.</li>
+      <li>At the end, four boxes show whether the problem is in the chatbot or in the checker.</li>
+    </ol>
+    <div class="startpic">
+      <svg viewBox="0 0 300 200" role="img" aria-label="Four boxes. Rows: judge says bad or good. Columns: the labels say bad or good.">
+        <text x="127" y="14" text-anchor="middle" style="fill:var(--muted);font-size:11px">Labels: bad</text>
+        <text x="241" y="14" text-anchor="middle" style="fill:var(--muted);font-size:11px">Labels: good</text>
+        <text x="4" y="76" style="fill:var(--muted);font-size:11px">Judge: bad</text>
+        <text x="4" y="150" style="fill:var(--muted);font-size:11px">Judge: good</text>
+        <rect x="70" y="22" width="110" height="70" rx="8" style="fill:var(--fail-bg);stroke:var(--fail);stroke-width:2"/>
+        <rect x="184" y="22" width="110" height="70" rx="8" style="fill:var(--warn-bg);stroke:var(--warn-border);stroke-width:2"/>
+        <rect x="70" y="96" width="110" height="70" rx="8" style="fill:var(--warn-bg);stroke:var(--warn-border);stroke-width:2"/>
+        <rect x="184" y="96" width="110" height="70" rx="8" style="fill:var(--pass-bg);stroke:var(--pass);stroke-width:2"/>
+        <text x="125" y="62" text-anchor="middle" style="fill:var(--text);font-size:12px;font-weight:700">Both say bad</text>
+        <text x="239" y="62" text-anchor="middle" style="fill:var(--text);font-size:12px;font-weight:700">Judge too strict</text>
+        <text x="125" y="136" text-anchor="middle" style="fill:var(--text);font-size:12px;font-weight:700">Judge missed it</text>
+        <text x="239" y="136" text-anchor="middle" style="fill:var(--text);font-size:12px;font-weight:700">Both say good</text>
+      </svg>
+      <ul class="legend4">
+        <li><strong>Both say bad:</strong> a real chatbot problem. Fix the chatbot.</li>
+        <li><strong>Judge too strict:</strong> the checker flags answers that are fine. Fix the checker.</li>
+        <li><strong>Judge missed it:</strong> the checker lets bad answers through. Fix the checker.</li>
+        <li><strong>Both say good:</strong> nothing to fix.</li>
+      </ul>
+    </div>
+    <p class="small muted">All data is SYNTHETIC (invented). The tour fills in sample answers for you, marked as sample labels, so it is not your own review. The demo judge follows simple rules, so nothing is paid for and nothing is sent anywhere. A real AI judge can be switched on later. The demo judge is not AI, so its numbers are not a real result.</p>
+    <div class="row" style="margin-top:12px"><button id="btnTour" class="bigbtn primary">Start the 2 minute tour</button><button id="btnSkip" class="linkbtn">Skip, I'll explore</button></div>
+  </div>
+</section>
+
+<!-- SCREEN 1: read each bot answer next to the fact sheet and mark it good or bad, with a short note -->
+<section id="screen-review" hidden aria-label="Review answers">
+  <div class="card">
+    <div class="row between">
+      <div>
+        <h2 style="margin:0">Is the chatbot's answer right?</h2>
+        <p class="muted small" style="margin:4px 0 0">A chatbot for a made-up payments app answered the questions below. All data is SYNTHETIC (invented).</p>
+      </div>
+      <div class="row"><button id="btnSample">Load sample review</button><button id="btnNextStep" hidden>Next: group the problems</button><button class="help" data-help="review" aria-label="Help for this screen">?</button></div>
+    </div>
+    <ol class="small" style="margin:10px 0 0;padding-left:20px">
+      <li>Read the question and the bot's answer.</li>
+      <li>Check it against the fact sheet.</li>
+      <li>Choose Good answer or Bad answer, add a few words about what went wrong, and save.</li>
+    </ol>
+    <p id="progressText" class="small" style="margin:10px 0 0"></p>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <article class="card" id="traceCard" aria-labelledby="traceTitle">
+        <div class="row between">
+          <h2 id="traceTitle"></h2>
+          <span id="traceType" class="chip"></span>
+        </div>
+        <div class="qa">
+          <h3>User question</h3>
+          <p id="qText"></p>
+          <h3>Bot answer</h3>
+          <p id="aText"></p>
+        </div>
+
+        <div id="callArea">
+          <h3>Your verdict</h3>
+          <div class="row" role="group" aria-label="Good answer or bad answer">
+            <button id="btnPass" class="choice pass" aria-pressed="false">Good answer</button>
+            <button id="btnFail" class="choice fail" aria-pressed="false">Bad answer</button>
+          </div>
+          <label for="noteInput">What went wrong? (a few words; optional if the answer is good)</label>
+          <input id="noteInput" type="text" maxlength="200" autocomplete="off">
+          <div id="noteHint" class="note-hint"></div>
+          <div class="row" style="margin-top:12px">
+            <button id="btnCommit" disabled>Save my answer</button>
+            <button id="btnCancelEdit" hidden>Cancel</button>
+          </div>
+        </div>
+
+        <div id="summaryArea" hidden>
+          <h3>Your verdict</h3>
+          <p style="margin:0 0 4px"><span id="sumLabel"></span> <span id="sumSource" class="chip"></span></p>
+          <p style="margin:0 0 8px">Your note: <span id="sumNote"></span></p>
+          <button id="btnEdit">Change my answer</button>
+        </div>
+
+        <div id="builderNote" class="reveal" hidden>
+          <strong>Note from the data builder (shown after you save):</strong>
+          <span id="builderNoteText"></span>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnPrev">Previous</button>
+          <button id="btnNext">Next</button>
+          <button id="btnNextUn">Next one I have not done</button>
+        </div>
+      </article>
+
+      <div class="card chartwrap">
+        <h2>Different kinds of problems found so far</h2>
+        <p class="small muted" id="chartLabel"></p>
+        <div id="chart"></div>
+        <details style="margin-top:12px">
+          <summary>Advanced (optional)</summary>
+          <h3 style="margin-top:12px">Jump to any answer</h3>
+          <div id="grid" role="group" aria-label="Answer navigator"></div>
+          <p class="legend">P = good answer, F = bad answer, blank = not done yet. Dashed border = sample label, not your own review. The order is shuffled with fixed seed 20251027.</p>
+          <h3 style="margin-top:16px">Fine-tune the estimate</h3>
+          <label for="overlapRange">How alike two notes must be to count as the same kind of problem: <span id="overlapVal"></span></label>
+          <input id="overlapRange" type="range" min="0.05" max="0.8" step="0.05">
+          <p class="note-hint">Lower means notes are grouped together more easily, so fewer kinds are counted. Notes with too few useful words are not counted.</p>
+          <p class="small"><strong>Override single notes</strong> if the estimate got one wrong.</p>
+          <div style="overflow:auto"><table id="typeTable"><thead><tr><th>#</th><th>Conversation</th><th>Note</th><th>Estimated kind</th><th>New kind?</th><th>Override</th></tr></thead><tbody></tbody></table></div>
+        </details>
+      </div>
+    </div>
+
+    <aside class="card side" aria-label="Fact sheet">
+      <h2>Fact sheet <span class="badge syn">SYNTHETIC</span></h2>
+      <p class="small muted" id="fsMeta"></p>
+      <label for="ruleFilter" style="margin-top:0">Search the rules</label>
+      <input id="ruleFilter" type="text" placeholder="e.g. dispute, KYC-07, premium" autocomplete="off">
+      <div id="fsTiers" style="margin-top:12px;overflow:auto"></div>
+      <div id="fsRules"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- SCREEN 2: group your notes on bad answers into named problem groups, then lock them -->
+<section id="screen-groups" hidden aria-label="Group the problems">
+  <div class="card">
+    <div class="row between"><h2 style="margin:0">Group similar problems together</h2><button class="help" data-help="groups" aria-label="Help for this screen">?</button></div>
+    <p class="small muted" style="margin:0 0 8px">These are the notes you wrote on bad answers.</p>
+    <ol class="small" style="margin:0 0 10px;padding-left:20px">
+      <li>Press Suggest groups.</li>
+      <li>Rename each group so it says what went wrong. Move notes that sit in the wrong group. Merge groups that mean the same thing.</li>
+      <li>Press Lock groups when you are happy.</li>
+    </ol>
+    <p id="srcCounts" class="small"></p>
+    <div class="row"><button id="btnMock">Suggest groups (free, local)</button></div>
+    <p class="note-hint">The suggestions are rough on purpose. Nothing is sent over the internet.</p>
+  </div>
+
+  <div class="card" id="checksCard">
+    <h2>Things to fix before you lock</h2>
+    <div id="checkSummary"></div>
+  </div>
+
+  <div id="groupsList"></div>
+
+  <div class="card" id="orphanCard">
+    <h2>Notes not in any group</h2>
+    <div id="orphanList"></div>
+  </div>
+
+  <div class="card" id="vagueCard">
+    <h2>Too vague to classify</h2>
+    <p class="small muted">These notes do not say enough to place in a group. They are left out when you lock. To include one, rewrite it on screen 1.</p>
+    <div id="vagueList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Lock your groups</h2>
+    <p class="small muted" id="lockText"></p>
+    <div class="row"><button id="btnLock">Lock groups</button><button id="btnUnlock" hidden>Unlock</button><button id="btnToJudge" hidden>Next: build the checker</button><button id="btnBack2" hidden>Back to step 1: review answers</button></div>
+  </div>
+
+  <details class="card" id="advGroups">
+    <summary>Advanced (optional)</summary>
+    <h3 style="margin-top:12px">Suggestions and groups</h3>
+    <div class="row">
+      <label for="mockK" style="margin:0;font-weight:400">Number of groups to suggest</label>
+      <input id="mockK" type="number" min="2" max="20" style="width:80px">
+      <button id="btnNewGroup">Add an empty group</button>
+    </div>
+
+    <h3 style="margin-top:16px">Check settings</h3>
+    <div class="row">
+      <div><label for="sMinGroup">A group is small if it has fewer notes than</label><input id="sMinGroup" type="number" min="1" max="20"></div>
+      <div><label for="sMinName">Useful words needed in a group name</label><input id="sMinName" type="number" min="1" max="6"></div>
+      <div><label for="sMinNote">Useful words needed in a note</label><input id="sMinNote" type="number" min="1" max="6"></div>
+    </div>
+    <label for="sVague">Vague words (ignored when counting useful words)</label>
+    <textarea id="sVague" rows="4"></textarea>
+    <div class="row" style="margin-top:8px"><button id="btnVagueReset">Restore the default vague words</button></div>
+
+    <h3 style="margin-top:16px">Ask Claude to suggest groups (paid, uses your own key)</h3>
+    <div id="liveBox">
+      <p class="small"><strong>Model:</strong> <span class="chip modelname"></span> (fixed, it cannot be changed here)</p>
+      <p class="small muted">Off by default. Nothing is sent until you paste a key, tick the box and confirm twice. The key is kept only in this field, is never saved or exported, and is cleared after the request. Only the notes shown below are sent. No labels or other data from the files are sent.</p>
+      <label for="liveKey">Your Claude API key</label>
+      <input id="liveKey" type="password" autocomplete="off" spellcheck="false">
+      <label for="livePayload">Exactly what would be sent (notes only)</label>
+      <textarea id="livePayload" rows="6" readonly></textarea>
+      <label style="font-weight:400;display:flex;gap:8px;align-items:flex-start"><input id="liveOk" type="checkbox" style="width:auto;margin-top:5px"> <span>I understand this makes a paid call to Anthropic using my own key.</span></label>
+      <div class="row" style="margin-top:8px"><button id="btnLive" disabled>Send to Claude...</button></div>
+      <p id="liveMsg" class="small" role="status"></p>
+    </div>
+  </details>
+</section>
+
+<!-- SCREEN 3: instructions for an automatic checker (a judge) are made for you from the locked groups; practise on a tuning set, then open a sealed set once per version -->
+<section id="screen-judge" hidden aria-label="Test an automatic checker">
+  <div class="card">
+    <div class="row between">
+      <h2 style="margin:0">Build and test an automatic checker</h2>
+      <div class="row"><span id="badge3" class="testbadge">DEMO JUDGE, simple rules, not AI</span><span class="chip judgechip"></span><button class="help" data-help="judge" aria-label="Help for this screen">?</button></div>
+    </div>
+    <p id="judgeIntro" class="small muted" style="margin:8px 0 0">An automatic checker (called a judge) reads a question and the bot's answer, then says good or bad. The demo judge follows simple rules, so nothing is paid for and nothing is sent anywhere. A real AI judge can be switched on later. It only ever sees the question and the bot's answer, and its numbers are demo numbers, not a real result.</p>
+  </div>
+
+  <div id="judgeGate" class="card" hidden></div>
+
+  <div id="judgeBody">
+    <div class="card" id="autoCard">
+      <p id="autoLine" class="small" style="margin:0 0 6px"></p>
+      <p id="splitLabels" class="small" style="margin:0"></p>
+    </div>
+
+    <div class="card" id="stepTuning">
+      <h2 id="hA">Step A: Practise (not done)</h2>
+      <p class="small muted">Try the checker on practice answers. You can do this as often as you like.</p>
+      <div class="row"><button id="btnTuning">Practise on the tuning set</button></div>
+      <p id="tuningResult" class="small" role="status"></p>
+    </div>
+
+    <div class="card" id="stepSealed">
+      <h2 id="hB">Step B: Final test (waiting)</h2>
+      <p class="small muted">The sealed set is like a final exam. You can open it once for each version of the instructions, and every opening is counted.</p>
+      <div class="row"><button id="btnSealed">Final test on the sealed set</button><button id="btnToFix" hidden>Next: see where to fix</button></div>
+      <p id="sealedStatus" class="small" role="status"></p>
+      <p id="attemptsText" class="small"></p>
+    </div>
+
+    <details class="card" id="advJudge">
+      <summary>Advanced (optional): split, instructions, versions and history</summary>
+
+      <div id="stepSplit" style="margin-top:12px">
+        <h3>The split</h3>
+        <p class="small muted">The labeled answers are shared out three ways: examples that go into the instructions, a tuning set to practise on, and a sealed set kept for the final test.</p>
+        <div id="splitSummary"></div>
+        <div class="row" style="margin-top:8px"><button id="btnSplit">Make the split</button></div>
+        <p id="splitNote" class="note-hint"></p>
+        <div class="row">
+          <div><label for="sExamples">Examples (percent)</label><input id="sExamples" type="number" min="0" max="60"></div>
+          <div><label for="sTuning">Tuning set (percent)</label><input id="sTuning" type="number" min="10" max="80"></div>
+          <div><label>Sealed set (percent)</label><p id="sFinalPct" style="margin:8px 0 0"></p></div>
+        </div>
+        <p class="note-hint">The split uses a fixed seed and keeps the mix of question types and good or bad answers the same in each part. It cannot be changed once the judge has been run. Making it again also saves version 1 again.</p>
+      </div>
+
+      <div id="stepPrompt" style="margin-top:16px">
+        <h3>The checker's instructions</h3>
+        <p class="small muted">Made from the fact sheet, your locked groups and a few worked examples. You can edit them. Each saved edit is a new version.</p>
+        <p class="note-hint">The first draft deliberately leaves out the rule about invented or differing numbers, times and promises, so the fix loop can be shown.</p>
+        <p class="note-hint">The demo judge also has a few built-in simple checks that do not read these instructions, so this text is not the whole story. A real AI judge follows only its instructions.</p>
+        <div class="row">
+          <label for="verSelect" style="margin:0">Version</label>
+          <select id="verSelect" style="width:auto;min-width:200px"></select>
+          <span id="verInfo" class="small muted"></span>
+        </div>
+        <label for="judgePrompt">Instructions</label>
+        <textarea id="judgePrompt" class="prompt" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button id="btnSaveVer">Save as version 1</button>
+          <button id="btnRebuild">Rebuild from my groups</button>
+        </div>
+        <div class="row">
+          <div><label for="testStrict">Demo judge strictness (demo only)</label>
+            <select id="testStrict"><option value="lenient">lenient</option><option value="balanced">balanced</option><option value="strict">strict</option></select></div>
+          <div><label for="sMaxEx">Worked examples in the instructions</label><input id="sMaxEx" type="number" min="0" max="20"></div>
+        </div>
+        <p class="note-hint">The strictness belongs to the version you save. The demo judge follows simple rules and reacts to one sentence: add "Calculated numbers are fine." to the instructions and it stops flagging numbers that are worked out from the question. A real AI judge would respond in its own way.</p>
+      </div>
+
+      <div id="stepLive" style="margin-top:16px">
+        <h3>Live Claude judge (paid, uses your own key)</h3>
+        <p class="small"><strong>Model:</strong> <span class="chip modelname"></span> (fixed, it cannot be changed here)</p>
+        <p class="small muted">Off by default. When it is on, the practice and the final test use a real AI judge instead of the demo judge, and every call is paid for with your key. Only the question, the bot answer and the instructions are sent. The instructions contain worked examples with their verdicts, taken only from the examples part. No label of any practice or sealed answer is ever sent, and the sealed set is sent only after you accept the sealed set confirm. The key is kept in memory only, is never saved or exported, and is gone when you close or reload the page.</p>
+        <label for="ljKey">Your Claude API key (at least 20 characters)</label>
+        <input id="ljKey" type="password" autocomplete="off" spellcheck="false">
+        <label style="font-weight:400;display:flex;gap:8px;align-items:flex-start"><input id="ljOk" type="checkbox" style="width:auto;margin-top:5px"> <span>I understand this makes paid calls with my key.</span></label>
+        <div class="row" style="margin-top:8px"><button id="btnLiveOn" disabled>Switch on the live judge</button><button id="btnLiveOff" hidden>Switch off and forget the key</button></div>
+        <p id="ljState" class="small" role="status"></p>
+        <label for="ljPayload">Exact payload for one answer (the first practice answer of the current version)</label>
+        <textarea id="ljPayload" rows="8" readonly></textarea>
+        <p class="note-hint">Before any run you see the number of calls and a rough cost range in two confirm windows. It stops at the first error and never retries on its own. The sealed set opens once per version, whichever judge you use.</p>
+      </div>
+
+      <div id="stepChanged" style="margin-top:16px">
+        <h3>What changed since the last version</h3>
+        <div id="fixHistory"></div>
+      </div>
+
+      <div id="stepLog" style="margin-top:16px">
+        <h3>Every run so far</h3>
+        <div style="overflow:auto"><table id="logTable"><thead><tr><th>#</th><th>Version</th><th>Set</th><th>When</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- SCREEN 4: four boxes comparing the demo judge with the labels, one next-step sentence, and one agreement score -->
+<section id="screen-fix" hidden aria-label="Where to fix">
+  <div class="card">
+    <div class="row between">
+      <h2 style="margin:0">Where should you act?</h2>
+      <div class="row"><span id="badge4" class="testbadge">DEMO JUDGE, simple rules, not AI</span><span class="chip judgechip"></span><button class="help" data-help="fix" aria-label="Help for this screen">?</button></div>
+    </div>
+    <p class="small muted" style="margin:8px 0 0">Each answer is put in one of four boxes by comparing what the demo judge said with what the labels say. The boxes tell you whether to fix the chatbot or fix the judge. <span id="fixNote">These numbers come from the demo judge, which follows simple rules and is not AI, so do not read them as a real result.</span></p>
+    <div class="row" style="margin-top:8px">
+      <label for="fixVersion" style="margin:0">Version</label>
+      <select id="fixVersion" style="width:auto"></select>
+      <label for="fixSet" style="margin:0">Answers</label>
+      <select id="fixSet" style="width:auto"></select>
+    </div>
+    <p id="fixLabels" class="small" style="margin:8px 0 0"></p>
+  </div>
+  <div id="fixEmpty" class="card" hidden></div>
+  <div id="fixBody">
+    <div class="matrix" id="matrix"></div>
+    <div class="card" id="improveCard" hidden>
+      <h2>Improve the checker</h2>
+      <p id="improveText" class="small" style="margin:0 0 8px"></p>
+      <p id="liveErr4" class="small" role="alert" hidden></p>
+      <p class="reveal" style="margin:8px 0"><code id="improveSentence"></code></p>
+      <p id="improveNote" class="note-hint">The demo judge reacts to these sentences so the loop can be shown. A real AI judge would respond in its own way.</p>
+      <div class="row"><button id="btnAddSave">Add it and save as version 2</button><button id="btnFinal2" hidden>Run the final test for version 2</button><button id="btnBack3" hidden>Back to screen 3</button></div>
+      <h3 id="cmpHeading" style="margin-top:16px" hidden>Version comparison</h3>
+      <div id="changedMain"></div>
+    </div>
+    <div class="card" id="nextCard">
+      <h2>What to do next</h2>
+      <p id="nextSentence" style="margin:0 0 4px"></p>
+      <p class="note-hint" style="margin:0 0 10px">(plain-code text, not written by Claude)</p>
+      <div class="row"><button id="btnNext4">Download my work</button></div>
+    </div>
+    <div class="card" id="kappaCard"></div>
+    <details class="card" id="detailed">
+      <summary>Detailed scores</summary>
+      <div id="detailBody" style="margin-top:12px"></div>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<div id="guide" class="guide" hidden><strong>What happened, and why press this next</strong><p id="guideText"></p><span class="note-hint">(plain-code text, not written by Claude)</span></div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <h2 id="dlgTitle" style="margin-top:0"></h2>
+  <div id="dlgBody"></div>
+  <div class="row" style="margin-top:16px;justify-content:flex-end">
+    <button id="dlgNo">Cancel</button>
+    <button id="dlgYes" class="primary">Confirm</button>
+  </div>
+</dialog>
+
+<script>
+(function(){
+'use strict';
+
+var SEED = 20251027;
+var SPLIT_SEED = 20251028;
+var STORE = 'faultline.v1';
+// The one fixed model for every live Claude call on this page. Change it here and nowhere else.
+var MODEL = 'claude-haiku-5-5';
+var STOP = new Set('a an and are as at be been but by can could did do does for from get gets got had has have he her his how i if in into is it its just me my no of on or our out she so than that the their them then there these they this those to too up us was we were what when where which while who why will with would you your'.split(' '));
+var DEF_VAGUE = 'answer reply response bot seems seem feels feel off wrong right bad good fine okay ok nothing something anything stuff thing things issue issues problem problems error errors unclear mixed various general other others misc miscellaneous not enough user one more say guess looks look overall';
+
+var DATA = { fs: null, traces: [], byId: {}, guideline: '' };
+var order = [];
+var pos = 0;
+var state = null;
+var EDIT = new Set();
+var DRAFT = {};
+var dlgYesHandler = null;
+
+function $(id){ return document.getElementById(id); }
+function h(tag, attrs){
+  var e = document.createElement(tag);
+  if (attrs) { Object.keys(attrs).forEach(function(k){
+    var v = attrs[k];
+    if (v == null || v === false) return;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else e.setAttribute(k, v);
+  }); }
+  function add(c){
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) { c.forEach(add); return; }
+    e.appendChild(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  for (var i = 2; i < arguments.length; i++) add(arguments[i]);
+  return e;
+}
+function clear(e){ while (e.firstChild) e.removeChild(e.firstChild); }
+function say(msg){ $('live').textContent = msg; }
+
+/* ---------- text helpers: split words, count useful words, seeded shuffle (plain code) ---------- */
+function words(text){
+  return String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+}
+function stem(w){
+  if (w.length > 5 && w.slice(-3) === 'ing') return w.slice(0, -3);
+  if (w.length > 4 && w.slice(-2) === 'ed') return w.slice(0, -2);
+  if (w.length > 3 && w.slice(-1) === 's' && w.slice(-2) !== 'ss') return w.slice(0, -1);
+  return w;
+}
+function vagueSet(){
+  var s = new Set();
+  words(state.settings.vague).forEach(function(w){ s.add(w); s.add(stem(w)); });
+  return s;
+}
+function content(text){
+  var vag = vagueSet();
+  return words(text).filter(function(w){ return !STOP.has(w) && !vag.has(w) && !vag.has(stem(w)); })
+    .map(function(w){ return { raw: w, stem: stem(w) }; });
+}
+function jac(a, b){
+  if (!a.size || !b.size) return 0;
+  var inter = 0;
+  a.forEach(function(x){ if (b.has(x)) inter++; });
+  return inter / (a.size + b.size - inter);
+}
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function seededOrder(ids){
+  var a = ids.slice(), r = mulberry32(SEED);
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(r() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function wordCount(s){ return words(s).length; }
+
+/* ---------- state: what is saved in this browser, and how it is checked when loaded ---------- */
+function defaults(){
+  return { version: 1,
+    settings: { overlap: 0.1, minGroup: 3, minNameWords: 2, minNoteWords: 2, mockK: 8, vague: DEF_VAGUE },
+    reviews: {}, drafts: {}, groups: [], assign: {}, nextGid: 1, locked: false, lockedAt: null, seenStart: false, tour: false,
+    judge: { settings: { examplesPct: 20, tuningPct: 40, maxExamples: 8 }, split: null, versions: [], cur: 0, draft: '', strictness: 'balanced', log: [], attempts: 0, auto: false,
+      detail: { lopsided: 80, costOver: 1, costMissed: 5, minAgree: 0.6, minLower: 0.7, minSealed: 30, budget: 50 } } };
+}
+function num(v, lo, hi, d){ v = Number(v); if (!isFinite(v)) return d; return Math.min(hi, Math.max(lo, v)); }
+function sanitize(s){
+  if (!s || typeof s !== 'object') return null;
+  var d = defaults();
+  var st = s.settings || {};
+  d.settings.overlap = num(st.overlap, 0.05, 0.8, d.settings.overlap);
+  d.settings.minGroup = Math.round(num(st.minGroup, 1, 20, d.settings.minGroup));
+  d.settings.minNameWords = Math.round(num(st.minNameWords, 1, 6, d.settings.minNameWords));
+  d.settings.minNoteWords = Math.round(num(st.minNoteWords, 1, 6, d.settings.minNoteWords));
+  d.settings.mockK = Math.round(num(st.mockK, 2, 20, d.settings.mockK));
+  if (typeof st.vague === 'string' && st.vague.length < 3000) d.settings.vague = st.vague;
+  var rv = s.reviews && typeof s.reviews === 'object' ? s.reviews : {};
+  Object.keys(rv).forEach(function(id){
+    var r = rv[id];
+    if (!r || typeof r !== 'object') return;
+    if (r.label !== 'pass' && r.label !== 'fail') return;
+    d.reviews[id] = { label: r.label, note: String(r.note || '').slice(0, 200), source: r.source === 'sample' ? 'sample' : 'user',
+      basis: r.basis === 'sme' ? 'sme' : (r.basis === 'builder' ? 'builder' : null), committed: true,
+      typeOverride: r.typeOverride === 'new' || r.typeOverride === 'same' ? r.typeOverride : null };
+  });
+  var gs = Array.isArray(s.groups) ? s.groups : [];
+  var gids = new Set();
+  gs.forEach(function(g){
+    if (!g || typeof g.id !== 'string' || gids.has(g.id)) return;
+    gids.add(g.id);
+    d.groups.push({ id: g.id, name: String(g.name || '').slice(0, 80), origin: ['mock', 'claude', 'user'].indexOf(g.origin) >= 0 ? g.origin : 'user' });
+  });
+  var asg = s.assign && typeof s.assign === 'object' ? s.assign : {};
+  Object.keys(asg).forEach(function(id){ if (gids.has(asg[id])) d.assign[id] = asg[id]; });
+  d.nextGid = Math.round(num(s.nextGid, 1, 100000, d.groups.length + 1));
+  d.locked = s.locked === true;
+  d.seenStart = s.seenStart === true;
+  d.tour = s.tour === true;
+  d.lockedAt = typeof s.lockedAt === 'string' ? s.lockedAt.slice(0, 40) : null;
+  if (s.drafts && typeof s.drafts === 'object') {
+    Object.keys(s.drafts).forEach(function(id){
+      var x = s.drafts[id];
+      if (x && (x.label === 'pass' || x.label === 'fail' || x.label === null)) d.drafts[id] = { label: x.label, note: String(x.note || '').slice(0, 200) };
+    });
+  }
+  d.judge = sanitizeJudge(s.judge);
+  return d;
+}
+function sanitizeJudge(x){
+  var d = defaults().judge;
+  if (!x || typeof x !== 'object') return d;
+  var st = x.settings || {};
+  d.settings.examplesPct = Math.round(num(st.examplesPct, 0, 60, 20));
+  d.settings.tuningPct = Math.round(num(st.tuningPct, 10, 80, 40));
+  if (d.settings.examplesPct + d.settings.tuningPct > 90) d.settings.tuningPct = 90 - d.settings.examplesPct;
+  d.settings.maxExamples = Math.round(num(st.maxExamples, 0, 20, 8));
+  d.strictness = STRICT.indexOf(x.strictness) >= 0 ? x.strictness : 'balanced';
+  d.draft = typeof x.draft === 'string' ? x.draft.slice(0, 20000) : '';
+  d.auto = x.auto === true;
+  var dt = x.detail || {};
+  d.detail.lopsided = Math.round(num(dt.lopsided, 50, 99, 80)); d.detail.costOver = num(dt.costOver, 0, 1000, 1); d.detail.costMissed = num(dt.costMissed, 0, 1000, 5);
+  d.detail.minAgree = num(dt.minAgree, 0, 1, 0.6); d.detail.minLower = num(dt.minLower, 0, 1, 0.7); d.detail.minSealed = Math.round(num(dt.minSealed, 1, 500, 30)); d.detail.budget = num(dt.budget, 0, 100000, 50);
+  var sp = x.split;
+  if (sp && typeof sp === 'object' && sp.ids && sp.labels) {
+    var ids = { examples: [], tuning: [], final: [] }, labels = {}, sources = {};
+    ['examples', 'tuning', 'final'].forEach(function(k){
+      (Array.isArray(sp.ids[k]) ? sp.ids[k] : []).forEach(function(id){
+        if (DATA.byId[id] && (sp.labels[id] === 'pass' || sp.labels[id] === 'fail') && !(id in labels)) {
+          ids[k].push(id); labels[id] = sp.labels[id]; sources[id] = sp.sources && sp.sources[id] === 'sample' ? 'sample' : 'user';
+        }
+      });
+    });
+    d.split = { seed: SPLIT_SEED, madeAt: typeof sp.madeAt === 'string' ? sp.madeAt.slice(0, 40) : '', ids: ids, labels: labels, sources: sources };
+  }
+  function sv(o, known){
+    var out = {};
+    if (o && typeof o === 'object') Object.keys(o).forEach(function(id){
+      var r = o[id];
+      if (known[id] && r && (r.verdict === 'pass' || r.verdict === 'fail')) out[id] = { verdict: r.verdict, group: typeof r.group === 'string' ? r.group.slice(0, 80) : null, reason: String(r.reason || '').slice(0, 200) };
+    });
+    return out;
+  }
+  var vs = Array.isArray(x.versions) ? x.versions.slice(0, 50) : [];
+  if (d.split) {
+    var tk = {}, fk = {};
+    d.split.ids.tuning.forEach(function(id){ tk[id] = true; });
+    d.split.ids.final.forEach(function(id){ fk[id] = true; });
+    vs.forEach(function(v){
+      if (!v || typeof v.prompt !== 'string') return;
+      var t = v.tuning && typeof v.tuning === 'object' ? { ranAt: String(v.tuning.ranAt || '').slice(0, 40), verdicts: sv(v.tuning.verdicts, tk), kind: v.tuning.kind === 'live' ? 'live' : 'demo', model: v.tuning.kind === 'live' ? String(v.tuning.model || '').slice(0, 60) : null } : null;
+      var f = v.final && typeof v.final === 'object' ? { openedAt: String(v.final.openedAt || '').slice(0, 40), verdicts: sv(v.final.verdicts, fk), kind: v.final.kind === 'live' ? 'live' : 'demo', model: v.final.kind === 'live' ? String(v.final.model || '').slice(0, 60) : null } : null;
+      d.versions.push({ n: d.versions.length + 1, prompt: v.prompt.slice(0, 20000), strictness: STRICT.indexOf(v.strictness) >= 0 ? v.strictness : 'balanced',
+        createdAt: String(v.createdAt || '').slice(0, 40), tuning: t, final: f });
+    });
+  }
+  d.cur = Math.min(Math.max(0, Math.round(num(x.cur, 0, 49, 0))), Math.max(0, d.versions.length - 1));
+  (Array.isArray(x.log) ? x.log.slice(0, 500) : []).forEach(function(l){
+    if (l && (l.set === 'tuning' || l.set === 'final')) d.log.push({ version: Math.round(num(l.version, 1, 50, 1)), set: l.set, at: String(l.at || '').slice(0, 40), agreed: Math.round(num(l.agreed, 0, 1000, 0)), total: Math.round(num(l.total, 0, 1000, 0)), kind: l.kind === 'live' ? 'live' : 'demo', failed: l.failed === true, error: String(l.error || '').slice(0, 900), calls: Math.round(num(l.calls, 0, 1000, 0)), usageIn: Math.round(num(l.usageIn, 0, 1e9, 0)), usageOut: Math.round(num(l.usageOut, 0, 1e9, 0)), usageKnown: l.usageKnown === true });
+  });
+  d.attempts = d.log.filter(function(l){ return l.set === 'final'; }).length;
+  return d;
+}
+function save(){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
+function loadSaved(){ try { var raw = localStorage.getItem(STORE); return raw ? sanitize(JSON.parse(raw)) : null; } catch (e) { return null; } }
+
+/* ---------- dialog: one pop-up window used for every confirmation ---------- */
+function ask(title, bodyNodes, yesLabel, onYes, infoOnly){
+  $('dlgTitle').textContent = title;
+  var b = $('dlgBody'); clear(b);
+  [].concat(bodyNodes).filter(Boolean).forEach(function(n){ b.appendChild(typeof n === 'string' ? h('p', { text: n }) : n); });
+  $('dlgYes').textContent = yesLabel || 'Confirm';
+  $('dlgNo').hidden = !!infoOnly;
+  dlgYesHandler = onYes;
+  var d = $('dlg');
+  if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+}
+function closeDlg(){ var d = $('dlg'); if (d.close) d.close(); else d.removeAttribute('open'); dlgYesHandler = null; }
+
+/* ---------- progress strip, tour bar, one blue button per screen, and the help pop-ups ---------- */
+var curScreen = 'start';
+var STEP_NAMES = ['review', 'groups', 'judge', 'fix'];
+var HELP = {
+  review: ['Read each bot answer next to the fact sheet and mark it Good answer or Bad answer, with a few words on what went wrong.', 'Your notes on bad answers are what you group on the next screen.'],
+  groups: ['Notes that describe the same problem go in the same group, and each group needs a name that says what went wrong.', 'Locking your groups lets the next screen build the checker from them.'],
+  judge: ['The checker is tried first on a practice set, then once on a sealed set it has never seen, like a final exam.', 'The demo judge follows simple rules, so nothing is paid for and nothing is sent anywhere, and a real AI judge can be switched on later.'],
+  fix: ['Each answer is put in one of four boxes by comparing the demo judge with what the labels say, and the boxes tell you whether to fix the chatbot or the checker.', 'The agreement score shows how often the two agree beyond pure luck, and these demo numbers are not a real result.']
+};
+function stepDone(i){
+  if (i === 0) return labeledIds().length >= 30;
+  if (i === 1) return state.locked;
+  if (i === 2) return jst().versions.some(function(v){ return !!v.final; });
+  return false;
+}
+function renderStrip(){
+  var idx = STEP_NAMES.indexOf(curScreen);
+  $('stepLabel').textContent = idx >= 0 ? 'Step ' + (idx + 1) + ' of 4' : 'Start here';
+  document.querySelectorAll('nav.strip button.step').forEach(function(b){
+    var i = STEP_NAMES.indexOf(b.getAttribute('data-screen'));
+    var cls = i === idx ? 'current' : (stepDone(i) ? 'done' : 'later');
+    b.className = 'tab step ' + cls;
+    b.querySelector('.st').textContent = cls === 'current' ? '(now)' : (cls === 'done' ? '(done)' : '(later)');
+    if (cls === 'current') b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+}
+
+function score(a, n){ return a + ' of ' + n + ' (' + pct(a, n) + '%)'; }
+var GUIDE = null, FIXMODE = 'done', FIXGUIDE = '';
+var SENT_STRICT = 'Calculated numbers are fine.';
+var SENT_MISSED = 'A number, time or promise that is not in the fact sheet is a fail.';
+// The demo judge reacts to these two sentences (and only to these) so the improvement loop can be shown.
+function improveSentenceFor(key){ return key === 'missed' ? SENT_MISSED : (key === 'too_strict' ? SENT_STRICT : null); }
+function newSentence(v, prev){
+  var all = [SENT_MISSED, SENT_STRICT];
+  for (var i = 0; i < all.length; i++) if (v.prompt.indexOf(all[i]) >= 0 && (!prev || prev.prompt.indexOf(all[i]) < 0)) return all[i];
+  return null;
+}
+function guideEl(){ if (!GUIDE) GUIDE = $('guide'); return GUIDE; }
+function kindOf(run){ return run && run.kind === 'live' ? 'live' : 'demo'; }
+function jn(kind){ return kind === 'live' ? 'live Claude judge' : 'demo judge'; }
+function Jn(kind){ return kind === 'live' ? 'Live Claude judge' : 'Demo judge'; }
+function judgeScore(run, set){ var sp = jst().split; return score(agreeCount(run.verdicts, sp.ids[set], sp.labels), sp.ids[set].length); }
+// Short plain-code explanation of what happened and why the blue button is next. Never written by Claude.
+function guideTextNow(){
+  var j = jst(), n = labeledIds().length, c = committedCounts(), v = curVersion();
+  if (curScreen === 'start') return 'Nothing has happened yet. Press this to fill in sample answers and walk through the four screens in about two minutes.';
+  if (curScreen === 'review') {
+    if (!$('callArea').hidden && !$('btnCommit').disabled) return 'You chose a verdict for this answer. Press this so it counts and the data builder note is shown for comparison.';
+    if (n < 30) return 'You have reviewed ' + n + ' of ' + order.length + ' answers, and the next screen needs at least 30. Press this to fill in sample answers so you can try the rest of the tool.';
+    return n + ' answers are reviewed (' + c.user + ' by you, ' + c.sample + ' from the sample). Grouping is next because your notes on bad answers must be sorted into named problem groups before a checker can look for them.';
+  }
+  if (curScreen === 'groups') {
+    var ck = runChecks(), G = state.groups.length, W = ck.vagueNames.length + ck.tiny.length + ck.empty.length + ck.orphans.length;
+    if (!ck.usable.length) return 'There are no notes on bad answers yet, so there is nothing to group. Press this to go back and review some answers.';
+    if (state.locked) return 'Your ' + G + ' groups are locked, so the checker can be built from them. Press this to build and test the checker.';
+    if (!G) return (ck.usable.length === 1 ? '1 note on a bad answer needs sorting.' : ck.usable.length + ' notes on bad answers need sorting.') + ' Press this so similar notes are put together for you to tidy.';
+    return 'There are ' + G + ' groups and ' + W + ' warnings (vague names, groups with few notes, or notes in no group). Locking is next because the checker is built from locked groups, and you can still lock with warnings.';
+  }
+  if (curScreen === 'judge') {
+    if (!state.locked) return 'Your groups are not locked yet, and the checker is built from locked groups. Press this to go back and lock them.';
+    if (n < 30) return 'You have ' + n + ' labeled answers and need 30 to split them. Press this to go back and label more.';
+    if (!v) return 'No version of the instructions is saved yet. Press this to save one.';
+    if (!$('btnSaveVer').disabled && $('advJudge').open) return 'You changed the instructions. Press this to save them as a new version, which gets its own practice run and its own single look at the sealed set.';
+    if (!v.tuning) return (v.n === 1 && j.auto ? 'The split and version 1 were made for you.' : 'Version ' + v.n + ' is saved but not practised yet.') + ' Practising comes first because it shows how the ' + jn(LIVE.on ? 'live' : 'demo') + ' does on practice answers without using up the one final test.';
+    if (!v.final) return 'Practice score: the ' + jn(kindOf(v.tuning)) + ' agreed with the labels on ' + judgeScore(v.tuning, 'tuning') + '. The final test is next to check that score was not luck, on answers the judge has never seen.';
+    return 'Final score: the ' + jn(kindOf(v.final)) + ' agreed with the labels on ' + judgeScore(v.final, 'final') + '. The next screen shows where the disagreements are and whether to fix the chatbot or the judge.';
+  }
+  if (curScreen === 'fix') return FIXGUIDE;
+  return '';
+}
+function tourTextNow(){
+  var v = curVersion();
+  if (curScreen === 'review') return labeledIds().length >= 30 ? 'Tour: sample answers are already filled in. Press the blue button to move on to grouping.' : 'Tour: press the blue button to fill in sample answers.';
+  if (curScreen === 'groups') return state.locked ? 'Tour: your groups are locked. Press the blue button to build the checker.' : (state.groups.length ? 'Tour: groups are suggested. Press the blue button to lock them.' : 'Tour: press the blue button to suggest groups.');
+  if (curScreen === 'judge') {
+    if (!state.locked) return 'Tour: your groups are not locked. Press the blue button to go back and lock them.';
+    if (!v) return 'Tour: press the blue button to continue.';
+    return !v.tuning ? 'Tour: press the blue button to practise.' : (!v.final ? 'Tour: practice is done. Press the blue button for the final test.' : 'Tour: the final test is done. Press the blue button to see where to fix.');
+  }
+  if (curScreen === 'fix') return FIXMODE === 'improve' ? 'Tour: this is the result. Press the blue button to try one improvement.' : (FIXMODE === 'final2' ? 'Tour: the improved version is practised. Press the blue button for its final test.' : (FIXMODE === 'back3' ? 'Tour: press the blue button to go back and practise.' : 'Tour: you reached the end. Press the blue button to download your work, or read the boxes again.'));
+  return '';
+}
+function renderTour(){
+  var on = !!(state.tour && curScreen !== 'start');
+  $('tourBar').hidden = !on;
+  if (on) $('tourText').textContent = tourTextNow();
+}
+// Exactly one button on the screen is the main (blue) button. Every other button stays quiet.
+// The explanation box is moved to sit right above it.
+function setPrimary(btn){
+  var g = guideEl();
+  document.querySelectorAll('button.primary').forEach(function(b){ if (!b.closest('dialog')) b.classList.remove('primary'); });
+  if (btn && !btn.disabled && !btn.hidden) {
+    btn.classList.add('primary');
+    var anchor = btn.parentNode && btn.parentNode.classList.contains('row') ? btn.parentNode : btn;
+    anchor.parentNode.insertBefore(g, anchor);
+    $('guideText').textContent = guideTextNow(); g.hidden = false;
+  } else g.hidden = true;
+  renderTour();
+}
+function showHelp(key){ ask('Help', HELP[key] || [], 'Close', null, true); }
+function renderStart(){ renderBanner(); setPrimary($('btnTour')); }
+function startTour(){ applySample(); state.tour = true; state.seenStart = true; save(); pos = 0; showScreen('review'); say('Tour started.'); }
+function primaryReview(){
+  if (!$('callArea').hidden && !$('btnCommit').disabled) return $('btnCommit');
+  return labeledIds().length >= 30 ? $('btnNextStep') : $('btnSample');
+}
+function updateNextStep(){ $('btnNextStep').hidden = labeledIds().length < 30; setPrimary(primaryReview()); }
+function groupsPrimary(ck){
+  $('btnToJudge').hidden = !state.locked;
+  $('btnBack2').hidden = ck.usable.length > 0 || state.locked;
+  var b;
+  if (state.locked) b = $('btnToJudge');
+  else if (!ck.usable.length) b = $('btnBack2');
+  else if (!state.groups.length) b = $('btnMock');
+  else b = $('btnLock');
+  setPrimary(b);
+}
+function primaryJudge(){
+  var v = curVersion();
+  if (!v) return $('btnSaveVer');
+  if (!$('btnSaveVer').disabled && $('advJudge').open) return $('btnSaveVer');
+  if (!v.tuning) return $('btnTuning');
+  if (!v.final) return $('btnSealed');
+  return $('btnToFix');
+}
+
+/* ---------- screens: show one screen at a time ---------- */
+function showScreen(name){
+  var names = ['start', 'review', 'groups', 'judge', 'fix'];
+  if (names.indexOf(name) < 0) name = 'review';
+  curScreen = name;
+  if (name !== 'start' && !state.seenStart) { state.seenStart = true; save(); }
+  names.forEach(function(n){ $('screen-' + n).hidden = n !== name; });
+  if (location.hash !== '#' + name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} }
+  if (name === 'start') renderStart(); else if (name === 'groups') renderGroups(); else if (name === 'judge') renderJudge(); else if (name === 'fix') renderFix(); else renderReview();
+}
+/* ---------- screen 1: review answers, save a verdict, reveal the builder note after saving ---------- */
+function currentId(){ return order[pos]; }
+function committedCounts(){
+  var u = 0, s = 0;
+  Object.keys(state.reviews).forEach(function(id){ if (state.reviews[id].source === 'sample') s++; else u++; });
+  return { user: u, sample: s };
+}
+function renderBanner(){
+  var c = committedCounts(), b = $('sampleBanner');
+  if (c.sample > 0) {
+    clear(b);
+    b.appendChild(document.createTextNode('Sample labels are loaded for ' + c.sample + ' answers. They are not your own review. Your own answers replace them one by one.'));
+    b.appendChild(h('button', { onclick: clearSample }, 'Clear sample labels'));
+    b.hidden = false;
+  } else { b.hidden = true; }
+  renderStrip(); renderTour(); renderModelChips();
+}
+function renderProgress(){
+  var c = committedCounts();
+  $('progressText').textContent = 'Done by you: ' + c.user + ' of ' + order.length + '. Filled in by the sample: ' + c.sample + '. Not done yet: ' + (order.length - c.user - c.sample) + '.';
+}
+function getDraft(id){
+  if (DRAFT[id]) return DRAFT[id];
+  var r = state.reviews[id];
+  var d = state.drafts[id] || (r ? { label: r.label, note: r.note } : { label: null, note: '' });
+  DRAFT[id] = { label: d.label, note: d.note };
+  return DRAFT[id];
+}
+function renderTrace(){
+  var id = currentId(), t = DATA.byId[id], r = state.reviews[id], editing = EDIT.has(id);
+  $('traceTitle').textContent = 'Conversation ' + (pos + 1) + ' of ' + order.length + ' (' + id + ')';
+  $('traceType').textContent = ({ direct_fact: 'simple fact question', process: 'how-to question', edge_case: 'tricky situation' })[t.question_type] || t.question_type;
+  $('qText').textContent = t.user_question;
+  $('aText').textContent = t.bot_answer;
+  var showControls = !r || editing;
+  $('callArea').hidden = !showControls;
+  $('summaryArea').hidden = showControls;
+  $('btnCancelEdit').hidden = !(r && editing);
+  // The builder's note is only put in the page after the reviewer has committed a label for this trace.
+  if (r) { $('builderNoteText').textContent = ' ' + t.open_code_note; $('builderNote').hidden = false; }
+  else { $('builderNoteText').textContent = ''; $('builderNote').hidden = true; }
+  if (showControls) {
+    var d = getDraft(id);
+    $('noteInput').value = d.note;
+    paintChoice(d.label);
+    updateCommitState();
+  } else {
+    var ls = $('sumLabel'); ls.textContent = r.label === 'pass' ? 'GOOD ANSWER' : 'BAD ANSWER'; ls.className = r.label === 'pass' ? 'label-pass' : 'label-fail';
+    $('sumNote').textContent = r.note || '(none)';
+    $('sumSource').textContent = r.source === 'sample' ? 'Sample label (' + (r.basis === 'sme' ? 'checked by a person' : 'from the data builder') + ')' : 'Your own answer';
+  }
+  $('btnPrev').disabled = pos === 0;
+  $('btnNext').disabled = pos === order.length - 1;
+}
+function paintChoice(label){
+  $('btnPass').setAttribute('aria-pressed', label === 'pass' ? 'true' : 'false');
+  $('btnFail').setAttribute('aria-pressed', label === 'fail' ? 'true' : 'false');
+}
+function updateCommitState(){
+  var d = getDraft(currentId()), n = wordCount(d.note);
+  var ok = (d.label === 'pass') || (d.label === 'fail' && d.note.trim().length > 0);
+  $('btnCommit').disabled = !ok;
+  var hint = '';
+  if (d.label === 'fail') {
+    hint = n + ' words. ' + (d.note.trim() ? (n < 4 || n > 12 ? 'Aim for about 4 to 12 words.' : 'Good length.') : 'Please write what went wrong.');
+  } else if (d.label === 'pass') { hint = n + ' words. A note is optional for a good answer.'; }
+  else { hint = 'Choose Good answer or Bad answer first.'; }
+  $('noteHint').textContent = hint;
+  if (!$('screen-review').hidden) setPrimary(primaryReview());
+}
+function chooseLabel(label){
+  var id = currentId(), d = getDraft(id);
+  d.label = label; state.drafts[id] = { label: d.label, note: d.note }; save();
+  paintChoice(label); updateCommitState();
+}
+function commitCall(){
+  var id = currentId(), d = getDraft(id);
+  if (!d.label) return;
+  var note = d.note.trim();
+  if (d.label === 'fail' && !note) return;
+  var prev = state.reviews[id];
+  state.reviews[id] = { label: d.label, note: note, source: 'user', basis: null, committed: true, typeOverride: prev ? prev.typeOverride : null };
+  delete state.drafts[id]; delete DRAFT[id]; EDIT.delete(id);
+  save(); say('Answer saved for ' + id + '. The data builder note is now shown.');
+  renderAll();
+}
+function startEdit(){ EDIT.add(currentId()); renderTrace(); $('noteInput').focus(); }
+function cancelEdit(){ var id = currentId(); EDIT.delete(id); delete DRAFT[id]; delete state.drafts[id]; save(); renderTrace(); }
+function go(i){ pos = Math.max(0, Math.min(order.length - 1, i)); renderTrace(); renderGrid(); }
+function nextUnreviewed(){
+  for (var k = 1; k <= order.length; k++) {
+    var i = (pos + k) % order.length;
+    if (!state.reviews[order[i]]) { go(i); return; }
+  }
+  say('Every conversation has an answer.');
+}
+function renderGrid(){
+  var g = $('grid'); clear(g);
+  order.forEach(function(id, i){
+    var r = state.reviews[id];
+    var cls = (r ? r.label : '') + (r && r.source === 'sample' ? ' sample' : '') + (i === pos ? ' cur' : '');
+    var txt = r ? (r.label === 'pass' ? 'P' : 'F') : '';
+    var status = r ? ((r.label === 'pass' ? 'good answer' : 'bad answer') + (r.source === 'sample' ? ', sample label' : ', your answer')) : 'not reviewed';
+    g.appendChild(h('button', { class: cls.trim(), 'aria-label': 'Conversation ' + (i + 1) + ', ' + id + ', ' + status, title: id,
+      'aria-current': i === pos ? 'true' : null, onclick: function(){ go(i); } }, txt));
+  });
+}
+function applySample(){
+  DATA.traces.forEach(function(t){
+    if (state.reviews[t.id]) return;
+    var human = t.sme_label === 'pass' || t.sme_label === 'fail';
+    state.reviews[t.id] = { label: human ? t.sme_label : t.builder_label, note: t.open_code_note, source: 'sample',
+      basis: human ? 'sme' : 'builder', committed: true, typeOverride: null };
+  });
+  save();
+}
+function loadSample(){
+  var n = 0;
+  DATA.traces.forEach(function(t){ if (!state.reviews[t.id]) n++; });
+  ask('Load sample review?', [
+    'This fills in ' + n + ' conversations you have not done yet, using example answers and notes, so you can try the next screen.',
+    'Sample labels are not your own review. A banner stays on screen while any are loaded. Your own answers are never overwritten.'
+  ], 'Load sample labels', function(){ applySample(); renderAll(); say('Sample labels loaded.'); });
+}
+function clearSample(){
+  Object.keys(state.reviews).forEach(function(id){ if (state.reviews[id].source === 'sample') delete state.reviews[id]; });
+  save(); renderAll(); say('Sample labels cleared.');
+}
+
+/* ---------- fact sheet panel next to the answers ---------- */
+function renderFactSheet(){
+  var fs = DATA.fs;
+  $('fsMeta').textContent = fs.synthetic_notice + ' Version ' + fs.version + '. Currency: ' + fs.currency.name + ' (' + fs.currency.code + ').';
+  var rows = [['per_transaction_limit_lc', 'Per transaction (LC)'], ['daily_limit_lc', 'Daily (LC)'], ['monthly_limit_lc', 'Monthly (LC)'],
+    ['monthly_transfer_count_cap', 'Transfers per month'], ['wallet_balance_cap_lc', 'Balance cap (LC)'], ['transfer_fee', 'Fee'], ['upgrade_path', 'Upgrade']];
+  var tiers = ['basic', 'verified', 'premium'];
+  var tbl = h('table', null,
+    h('thead', null, h('tr', null, h('th', null, ''), tiers.map(function(t){ return h('th', null, t); }))),
+    h('tbody', null, rows.map(function(rw){
+      return h('tr', null, h('th', null, rw[1]), tiers.map(function(t){ var v = fs.tiers[t][rw[0]]; return h('td', null, typeof v === 'number' ? v.toLocaleString('en-US') : String(v)); }));
+    })));
+  var tw = $('fsTiers'); clear(tw); tw.appendChild(tbl);
+  filterRules();
+}
+function filterRules(){
+  var q = $('ruleFilter').value.trim().toLowerCase();
+  var box = $('fsRules'); clear(box);
+  var areas = {}, order2 = [];
+  DATA.fs.rules.forEach(function(r){
+    if (q && (r.id + ' ' + r.text + ' ' + r.area).toLowerCase().indexOf(q) < 0) return;
+    if (!areas[r.area]) { areas[r.area] = []; order2.push(r.area); }
+    areas[r.area].push(r);
+  });
+  if (!order2.length) box.appendChild(h('p', { class: 'muted small' }, 'No rule matches.'));
+  order2.forEach(function(a){
+    box.appendChild(h('div', { class: 'area' }, a.replace('_', ' ')));
+    box.appendChild(h('dl', { class: 'rules' }, areas[a].map(function(r){ return [h('dt', null, r.id), h('dd', null, r.text)]; })));
+  });
+}
+
+/* ---------- chart: rough count of different kinds of problems found so far ---------- */
+function computeTypes(){
+  var th = state.settings.overlap, types = [], info = {}, read = 0, points = [{ x: 0, y: 0, isNew: false }];
+  order.forEach(function(id){
+    var r = state.reviews[id];
+    if (!r) return;
+    read++;
+    var isNew = false;
+    if (r.label === 'fail') {
+      var toks = new Set(content(r.note).map(function(x){ return x.stem; }));
+      if (toks.size < state.settings.minNoteWords) {
+        info[id] = { type: null, isNew: false, sim: 0, unclassified: true };
+      } else {
+        var best = -1, bs = 0;
+        types.forEach(function(t, i){ var s = jac(toks, t.tokens); if (s > bs) { bs = s; best = i; } });
+        var useNew;
+        if (r.typeOverride === 'new') useNew = true;
+        else if (r.typeOverride === 'same') { useNew = types.length === 0; if (!useNew && best < 0) best = 0; }
+        else useNew = best < 0 || bs < th;
+        if (useNew) { types.push({ tokens: new Set(toks) }); best = types.length - 1; isNew = true; }
+        else { toks.forEach(function(x){ types[best].tokens.add(x); }); }
+        info[id] = { type: best + 1, isNew: isNew, sim: bs, unclassified: false };
+      }
+    }
+    points.push({ x: read, y: types.length, isNew: isNew });
+  });
+  return { types: types.length, points: points, info: info, read: read };
+}
+function renderChart(){
+  var res = computeTypes();
+  $('overlapVal').textContent = state.settings.overlap.toFixed(2);
+  $('overlapRange').value = String(state.settings.overlap);
+  $('chartLabel').textContent = 'This is a rough estimate. The line counts different kinds of problems in the notes you wrote on bad answers. If it goes flat, you are no longer finding new kinds. Answers done: ' + res.read +
+    '. Kinds of problems found (estimate): ' + res.types + '.';
+  var W = 640, H = 260, L = 44, R = 12, T = 12, B = 36;
+  var maxX = Math.max(10, res.read), maxY = Math.max(5, res.types);
+  function X(v){ return L + (W - L - R) * v / maxX; }
+  function Y(v){ return H - B - (H - T - B) * v / maxY; }
+  var NS = 'http://www.w3.org/2000/svg';
+  function s(tag, attrs, text){ var e = document.createElementNS(NS, tag); Object.keys(attrs || {}).forEach(function(k){ e.setAttribute(k, attrs[k]); }); if (text != null) e.textContent = text; return e; }
+  var svg = s('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Kinds of problems found (estimate) against answers done. ' + res.types + ' kinds after ' + res.read + ' answers.' });
+  for (var yy = 0; yy <= maxY; yy += Math.max(1, Math.ceil(maxY / 5))) {
+    svg.appendChild(s('line', { x1: L, x2: W - R, y1: Y(yy), y2: Y(yy), stroke: 'currentColor', 'stroke-opacity': '0.15' }));
+    svg.appendChild(s('text', { x: L - 6, y: Y(yy) + 4, 'text-anchor': 'end' }, String(yy)));
+  }
+  for (var xx = 0; xx <= maxX; xx += Math.max(1, Math.ceil(maxX / 8))) {
+    svg.appendChild(s('text', { x: X(xx), y: H - B + 16, 'text-anchor': 'middle' }, String(xx)));
+  }
+  svg.appendChild(s('text', { x: (L + W - R) / 2, y: H - 4, 'text-anchor': 'middle' }, 'Answers done'));
+  var yl = s('text', { x: 12, y: (T + H - B) / 2, 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + ((T + H - B) / 2) + ')' }, 'Kinds of problems (estimate)');
+  svg.appendChild(yl);
+  var d = '';
+  res.points.forEach(function(p, i){
+    if (i === 0) d += 'M' + X(p.x) + ' ' + Y(p.y);
+    else { var pv = res.points[i - 1]; d += ' L' + X(p.x) + ' ' + Y(pv.y) + ' L' + X(p.x) + ' ' + Y(p.y); }
+  });
+  svg.appendChild(s('path', { d: d, fill: 'none', stroke: 'var(--accent)', 'stroke-width': '2' }));
+  res.points.forEach(function(p){ if (p.isNew) svg.appendChild(s('circle', { cx: X(p.x), cy: Y(p.y), r: 3.5, fill: 'var(--accent)' })); });
+  var c = $('chart'); clear(c); c.appendChild(svg);
+  // table of fails
+  var tb = $('typeTable').querySelector('tbody'); clear(tb);
+  var n = 0;
+  order.forEach(function(id){
+    var r = state.reviews[id];
+    if (!r || r.label !== 'fail') return;
+    n++;
+    var inf = res.info[id] || {};
+    var sel = h('select', { 'aria-label': 'Override for ' + id, onchange: function(ev){
+      var v = ev.target.value; r.typeOverride = v === 'auto' ? null : v; save(); renderChart();
+    } },
+      h('option', { value: 'auto' }, 'Auto'), h('option', { value: 'new' }, 'New kind'), h('option', { value: 'same' }, 'Same as an earlier one'));
+    sel.value = r.typeOverride || 'auto';
+    tb.appendChild(h('tr', null, h('td', null, n), h('td', null, id), h('td', null, r.note),
+      h('td', null, inf.unclassified ? 'too vague' : inf.type), h('td', null, inf.isNew ? 'yes' : (inf.unclassified ? '-' : 'no')), h('td', null, sel)));
+  });
+  if (!n) tb.appendChild(h('tr', null, h('td', { colspan: 6, class: 'muted' }, 'No fail notes yet.')));
+}
+
+/* ---------- screen 2: group notes, rename, move, merge, lock ---------- */
+function failNotes(){
+  var out = [];
+  order.forEach(function(id){
+    var r = state.reviews[id];
+    if (r && r.label === 'fail') out.push({ id: id, note: r.note, vague: content(r.note).length < state.settings.minNoteWords });
+  });
+  return out;
+}
+function pruneAssign(){
+  var okIds = {}; failNotes().forEach(function(n){ if (!n.vague) okIds[n.id] = true; });
+  var gids = {}; state.groups.forEach(function(g){ gids[g.id] = true; });
+  Object.keys(state.assign).forEach(function(id){ if (!okIds[id] || !gids[state.assign[id]]) delete state.assign[id]; });
+}
+function groupNotes(gid){ return failNotes().filter(function(n){ return state.assign[n.id] === gid; }); }
+function nameMeaningful(name){ return content(name).length; }
+function runChecks(){
+  pruneAssign();
+  var notes = failNotes();
+  var usable = notes.filter(function(n){ return !n.vague; });
+  var orphans = usable.filter(function(n){ return !state.assign[n.id]; });
+  var vagueNames = [], tiny = [], empty = [];
+  state.groups.forEach(function(g){
+    var size = groupNotes(g.id).length;
+    if (nameMeaningful(g.name) < state.settings.minNameWords) vagueNames.push(g.id);
+    if (size === 0) empty.push(g.id);
+    else if (size < state.settings.minGroup) tiny.push(g.id);
+  });
+  return { notes: notes, usable: usable, orphans: orphans, vagueNames: vagueNames, tiny: tiny, empty: empty, vagueNotes: notes.filter(function(n){ return n.vague; }) };
+}
+function newGid(){ var id = 'g' + state.nextGid; state.nextGid++; return id; }
+function mockPropose(){
+  var items = failNotes().filter(function(n){ return !n.vague; }).map(function(n){
+    var c = content(n.note);
+    return { ids: [n.id], sets: [new Set(c.map(function(x){ return x.stem; }))], disp: c };
+  });
+  function sim(a, b){
+    var tot = 0, cnt = 0;
+    a.sets.forEach(function(x){ b.sets.forEach(function(y){ tot += jac(x, y); cnt++; }); });
+    return cnt ? tot / cnt : 0;
+  }
+  var K = state.settings.mockK;
+  while (items.length > K) {
+    var bi = -1, bj = -1, bv = 0;
+    for (var i = 0; i < items.length; i++) for (var j = i + 1; j < items.length; j++) {
+      var v = sim(items[i], items[j]);
+      if (v > bv) { bv = v; bi = i; bj = j; }
+    }
+    if (bi < 0) break;
+    items[bi].ids = items[bi].ids.concat(items[bj].ids);
+    items[bi].sets = items[bi].sets.concat(items[bj].sets);
+    items[bi].disp = items[bi].disp.concat(items[bj].disp);
+    items.splice(bj, 1);
+  }
+  return items.map(function(it){
+    var cnt = {}, shown = {};
+    it.sets.forEach(function(s){ s.forEach(function(x){ cnt[x] = (cnt[x] || 0) + 1; }); });
+    it.disp.forEach(function(d){ if (!shown[d.stem]) shown[d.stem] = d.raw; });
+    var top = Object.keys(cnt).sort(function(a, b){ return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).slice(0, 2).map(function(k){ return shown[k]; });
+    var nm = top.length ? top[0].charAt(0).toUpperCase() + top[0].slice(1) + (top[1] ? ' / ' + top[1] : '') : 'Group';
+    return { name: nm, ids: it.ids };
+  });
+}
+function applyProposal(list, origin){
+  state.groups = []; state.assign = {};
+  list.forEach(function(p){
+    var id = newGid();
+    state.groups.push({ id: id, name: p.name, origin: origin });
+    p.ids.forEach(function(nid){ state.assign[nid] = id; });
+  });
+  save(); renderGroups();
+}
+function proposeMock(){
+  if (state.locked) return;
+  var go2 = function(){ applyProposal(mockPropose(), 'mock'); say('Groups suggested.'); };
+  if (state.groups.length) ask('Replace your current groups?', 'The new suggestion replaces every group and every move you have made.', 'Replace', go2);
+  else go2();
+}
+function addGroup(){
+  if (state.locked) return;
+  state.groups.push({ id: newGid(), name: '', origin: 'user' });
+  save(); renderGroups();
+}
+function mergeInto(srcId, dstId){
+  if (state.locked || srcId === dstId) return;
+  Object.keys(state.assign).forEach(function(id){ if (state.assign[id] === srcId) state.assign[id] = dstId; });
+  state.groups = state.groups.filter(function(g){ return g.id !== srcId; });
+  save(); renderGroups(); say('Groups merged.');
+}
+function moveNote(id, gid){
+  if (state.locked) return;
+  if (gid) state.assign[id] = gid; else delete state.assign[id];
+  save(); renderGroups();
+}
+function noteRow(n){
+  if (n.vague) {
+    return h('div', { class: 'noterow' },
+      h('button', { class: 'idlink', onclick: function(){ jumpTo(n.id); } }, n.id),
+      h('span', null, n.note),
+      h('span', { class: 'small muted' }, 'Rewrite it on screen 1'));
+  }
+  var sel = h('select', { 'aria-label': 'Group for ' + n.id, disabled: state.locked, onchange: function(ev){ moveNote(n.id, ev.target.value || null); } },
+    h('option', { value: '' }, 'Not in any group'),
+    state.groups.map(function(g){ return h('option', { value: g.id }, g.name || '(unnamed)'); }));
+  sel.value = state.assign[n.id] || '';
+  return h('div', { class: 'noterow' },
+    h('button', { class: 'idlink', onclick: function(){ jumpTo(n.id); } }, n.id),
+    h('span', null, n.note),
+    sel);
+}
+function jumpTo(id){
+  var i = order.indexOf(id);
+  if (i < 0) return;
+  showScreen('review'); go(i);
+}
+function renderGroups(){
+  renderBanner();
+  var ck = runChecks();
+  $('srcCounts').textContent = 'You wrote ' + ck.notes.length + ' notes on bad answers. ' + ck.vagueNotes.length + ' are too vague to classify. Groups so far: ' + state.groups.length + '.';
+  $('mockK').value = String(state.settings.mockK);
+  $('btnMock').disabled = state.locked || ck.usable.length === 0;
+  $('btnNewGroup').disabled = state.locked;
+  $('mockK').disabled = state.locked;
+  var sm = $('checkSummary'); clear(sm);
+  function line(ok, text){ return h('p', { style: 'margin:4px 0' }, h('span', { class: 'flag ' + (ok ? 'ok' : 'bad'), style: 'margin:0 8px 0 0' }, ok ? 'OK' : 'FIX'), text); }
+  if (!ck.notes.length) sm.appendChild(h('p', { class: 'muted' }, 'Nothing to group yet. On screen 1, mark some answers as bad and write a note, or press Load sample review.'));
+  else {
+    sm.appendChild(line(ck.vagueNames.length === 0, 'Group names that are too vague: ' + ck.vagueNames.length));
+    sm.appendChild(line(ck.tiny.length + ck.empty.length === 0, 'Groups with fewer than ' + state.settings.minGroup + ' notes: ' + (ck.tiny.length + ck.empty.length)));
+    sm.appendChild(line(ck.orphans.length === 0, 'Notes not in any group: ' + ck.orphans.length));
+  }
+  var gl = $('groupsList'); clear(gl);
+  state.groups.forEach(function(g){
+    var notes = groupNotes(g.id);
+    var vagueName = ck.vagueNames.indexOf(g.id) >= 0, isTiny = ck.tiny.indexOf(g.id) >= 0, isEmpty = ck.empty.indexOf(g.id) >= 0;
+    var nameIn = h('input', { type: 'text', value: g.name, 'aria-label': 'Group name', maxlength: '80', disabled: state.locked,
+      placeholder: 'Name this group (say what went wrong)', onchange: function(ev){ if (state.locked) return; g.name = ev.target.value.trim(); save(); renderGroups(); } });
+    var mergeSel = h('select', { 'aria-label': 'Merge ' + (g.name || 'group') + ' into another group', disabled: state.locked },
+      h('option', { value: '' }, 'Merge into...'),
+      state.groups.filter(function(o){ return o.id !== g.id; }).map(function(o){ return h('option', { value: o.id }, o.name || '(unnamed)'); }));
+    mergeSel.addEventListener('change', function(ev){ if (ev.target.value) mergeInto(g.id, ev.target.value); });
+    gl.appendChild(h('div', { class: 'gcard' + (state.locked ? ' locked' : '') },
+      h('div', { class: 'row' },
+        h('div', { style: 'flex:1 1 220px' }, nameIn),
+        h('span', { class: 'chip' }, notes.length + (notes.length === 1 ? ' note' : ' notes')),
+        vagueName ? h('span', { class: 'flag bad' }, 'Name too vague') : null,
+        isEmpty ? h('span', { class: 'flag bad' }, 'Empty') : (isTiny ? h('span', { class: 'flag bad' }, 'Few notes') : null),
+        h('div', { style: 'min-width:160px' }, mergeSel)),
+      notes.map(noteRow)));
+  });
+  if (!state.groups.length) gl.appendChild(h('p', { class: 'muted' }, 'No groups yet. Press Suggest groups.'));
+  var ol = $('orphanList'); clear(ol);
+  if (!ck.orphans.length) ol.appendChild(h('p', { class: 'muted' }, ck.usable.length ? 'None. Every note is in a group.' : 'Nothing here yet.'));
+  ck.orphans.forEach(function(n){ ol.appendChild(noteRow(n)); });
+  var vl = $('vagueList'); clear(vl);
+  if (!ck.vagueNotes.length) vl.appendChild(h('p', { class: 'muted' }, 'None.'));
+  ck.vagueNotes.forEach(function(n){ vl.appendChild(noteRow(n)); });
+  $('btnLock').hidden = state.locked; $('btnUnlock').hidden = !state.locked;
+  $('btnLock').disabled = state.groups.length === 0;
+  $('lockText').textContent = state.locked ? 'Your groups are locked. Unlock them if you want to change anything.' :
+    'Locking freezes the group names and which notes are in them. Notes that are too vague are left out. You can lock with open warnings, but you will be asked to confirm.';
+  $('sMinGroup').value = String(state.settings.minGroup);
+  $('sMinName').value = String(state.settings.minNameWords);
+  $('sMinNote').value = String(state.settings.minNoteWords);
+  $('sVague').value = state.settings.vague;
+  updateLivePayload();
+  groupsPrimary(ck);
+}
+function lockGroups(){
+  var ck = runChecks(), msgs = [], body = [];
+  if (ck.tiny.length + ck.empty.length) msgs.push('A few groups are small.');
+  if (ck.vagueNames.length) msgs.push('Some group names are vague.');
+  if (ck.orphans.length) msgs.push('Some notes are not in any group.');
+  body.push(msgs.length ? msgs.join(' ') + ' Lock anyway?' : 'No open warnings. Lock the groups?');
+  if (ck.vagueNotes.length) {
+    body.push('These notes are too vague, so they will be left out:');
+    body.push(h('ul', null, ck.vagueNotes.map(function(n){ return h('li', null, n.id + ': ' + n.note); })));
+  }
+  ask('Lock groups', body, 'Lock', function(){ state.locked = true; state.lockedAt = new Date().toISOString(); save(); renderGroups(); say('Groups locked.'); });
+}
+function unlockGroups(){
+  ask('Unlock groups?', 'You will be able to edit again. Anything built from the locked groups later will need to be rebuilt.', 'Unlock', function(){ state.locked = false; state.lockedAt = null; save(); renderGroups(); });
+}
+/* ---------- optional paid Claude suggestion for groups (off by default, needs key plus two confirms) ---------- */
+function livePayloadObj(){
+  var notes = failNotes().filter(function(n){ return !n.vague; }).map(function(n){ return { id: n.id, note: n.note }; });
+  var prompt = 'You group short reviewer notes about chatbot failures into failure groups. Each note has an id. ' +
+    'Return only JSON in this shape: {"groups":[{"name":"...","note_ids":["..."]}]}. ' +
+    'Rules: each group name must use at least two meaningful words that say what went wrong; each note id may appear in at most one group; ' +
+    'do not invent ids; leave a note out if it is too vague to place.\nNotes:\n' +
+    notes.map(function(n){ return '- ' + n.id + ': ' + n.note; }).join('\n');
+  return { notes: notes, body: { model: MODEL, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] } };
+}
+function updateLivePayload(){
+  var p = livePayloadObj();
+  $('livePayload').value = JSON.stringify(p.body, null, 2);
+  var ready = $('liveKey').value.trim().length >= 20 && $('liveOk').checked && !state.locked && p.notes.length > 0;
+  $('btnLive').disabled = !ready;
+}
+function liveAsk(){
+  if ($('btnLive').disabled) return;
+  var p = livePayloadObj();
+  ask('Send to Claude?', [
+    'This sends ' + p.notes.length + ' of your notes to Anthropic with model ' + MODEL + ', using the key you pasted. It may cost money.',
+    'Nothing else is sent: no labels or other data from the files.'
+  ], 'Send now', function(){ liveSend(p); });
+}
+function liveSend(p){
+  var key = $('liveKey').value.trim();
+  $('liveKey').value = ''; $('liveOk').checked = false; updateLivePayload();
+  $('liveMsg').textContent = 'Sending...';
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify(p.body)
+  }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); }).then(function(res){
+    if (!res.ok) throw new Error((res.j && res.j.error && res.j.error.message) || 'Request failed');
+    var text = (res.j.content || []).map(function(c){ return c.text || ''; }).join('');
+    var a = text.indexOf('{'), b = text.lastIndexOf('}');
+    var obj = JSON.parse(text.slice(a, b + 1));
+    var valid = {}; p.notes.forEach(function(n){ valid[n.id] = true; });
+    var used = {}, list = [];
+    (obj.groups || []).forEach(function(g){
+      var ids = (g.note_ids || []).filter(function(id){ if (!valid[id] || used[id]) return false; used[id] = true; return true; });
+      if (ids.length) list.push({ name: String(g.name || '').slice(0, 80), ids: ids });
+    });
+    if (!list.length) throw new Error('No usable groups in the reply');
+    applyProposal(list, 'claude');
+    $('liveMsg').textContent = 'Done. ' + list.length + ' groups applied.';
+  }).catch(function(e){ $('liveMsg').textContent = 'Failed: ' + e.message; });
+}
+
+/* ---------- screen 3: judge workshop. Split, instructions, versions, practice run, sealed set opened once per version ---------- */
+var STRICT = ['lenient', 'balanced', 'strict'];
+function jst(){ return state.judge; }
+function labeledIds(){ return order.filter(function(id){ return !!state.reviews[id]; }); }
+function shuffleSeeded(arr, rng){
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(rng() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function pct(a, b){ return b ? Math.round(100 * a / b) : 0; }
+function fmtDate(iso){ return String(iso || '').slice(0, 16).replace('T', ' '); }
+function groupNameById(gid){ var g = state.groups.filter(function(x){ return x.id === gid; })[0]; return g ? g.name : null; }
+// The judge is only ever given these two fields. Nothing else from the data files reaches it.
+function judgeInput(id){ var t = DATA.byId[id]; return { question: t.user_question, answer: t.bot_answer }; }
+
+function splitLocked(){ return jst().versions.some(function(v){ return v.tuning || v.final; }); }
+function buildSplit(){
+  var j = jst(), s = j.settings, strata = {};
+  labeledIds().forEach(function(id){
+    var k = DATA.byId[id].question_type + '|' + state.reviews[id].label;
+    (strata[k] = strata[k] || []).push(id);
+  });
+  var rng = mulberry32(SPLIT_SEED), ids = { examples: [], tuning: [], final: [] }, labels = {}, sources = {};
+  Object.keys(strata).sort().forEach(function(k){
+    var a = shuffleSeeded(strata[k].slice().sort(), rng), n = a.length;
+    var e = Math.round(n * s.examplesPct / 100), t = Math.round(n * s.tuningPct / 100);
+    if (e + t > n) t = n - e;
+    ids.examples = ids.examples.concat(a.slice(0, e));
+    ids.tuning = ids.tuning.concat(a.slice(e, e + t));
+    ids.final = ids.final.concat(a.slice(e + t));
+    a.forEach(function(id){ labels[id] = state.reviews[id].label; sources[id] = state.reviews[id].source === 'sample' ? 'sample' : 'user'; });
+  });
+  j.split = { seed: SPLIT_SEED, madeAt: new Date().toISOString(), ids: ids, labels: labels, sources: sources };
+  j.versions = []; j.cur = 0; j.log = []; j.attempts = 0;
+  j.draft = buildPrompt();
+}
+function autoSetup(){
+  var j = jst();
+  buildSplit();
+  j.versions.push({ n: 1, prompt: j.draft, strictness: j.strictness, createdAt: new Date().toISOString(), tuning: null, final: null });
+  j.cur = 0; j.auto = true;
+}
+function sheetLines(){
+  var fs = DATA.fs, L = [];
+  ['basic', 'verified', 'premium'].forEach(function(t){
+    var x = fs.tiers[t];
+    L.push(t + ': per transaction ' + x.per_transaction_limit_lc + ' LC, daily ' + x.daily_limit_lc + ' LC, monthly ' + x.monthly_limit_lc + ' LC, ' +
+      x.monthly_transfer_count_cap + ' transfers a month, wallet cap ' + x.wallet_balance_cap_lc + ' LC, fee ' + x.transfer_fee + '.');
+  });
+  fs.rules.forEach(function(r){ L.push(r.id + ': ' + r.text); });
+  return L;
+}
+function pickExamples(){
+  var j = jst(); if (!j.split) return [];
+  var max = j.settings.maxExamples, ids = j.split.ids.examples, lab = j.split.labels;
+  var bad = ids.filter(function(id){ return lab[id] === 'fail'; }), good = ids.filter(function(id){ return lab[id] === 'pass'; });
+  var nb = Math.min(bad.length, Math.ceil(max / 2)), ng = Math.min(good.length, max - nb);
+  nb = Math.min(bad.length, max - ng);
+  var out = [];
+  for (var i = 0; i < Math.max(nb, ng); i++) { if (i < nb) out.push(bad[i]); if (i < ng) out.push(good[i]); }
+  return out;
+}
+// The first draft of the instructions deliberately leaves out the sentence about invented or differing numbers, times and
+// promises, so the fix loop on screen 4 can add it as a genuinely new rule. The data file itself is not changed.
+function promptGuideline(){
+  return DATA.guideline.split(/(?<=[.!?])\s+/).filter(function(x){ return !/\btime, number or promise\b/i.test(x); }).join(' ');
+}
+function buildPrompt(){
+  var L = [];
+  L.push('You check answers from a support chatbot for a made-up payments app called PocketLoop. Everything below is invented for a demo.');
+  L.push(''); L.push('FACT SHEET (version ' + DATA.fs.version + ')');
+  sheetLines().forEach(function(x){ L.push(x); });
+  L.push(''); L.push('HOW TO JUDGE'); L.push(promptGuideline());
+  L.push(''); L.push('PROBLEM GROUPS (when you call an answer bad, name the group that fits best, or none)');
+  state.groups.forEach(function(g){ if (g.name && groupNotes(g.id).length) L.push('- ' + g.name); });
+  var ex = pickExamples();
+  if (ex.length) {
+    L.push(''); L.push('WORKED EXAMPLES');
+    ex.forEach(function(id, i){
+      var t = DATA.byId[id], bad = jst().split.labels[id] === 'fail';
+      L.push('Example ' + (i + 1)); L.push('Question: ' + t.user_question); L.push('Answer: ' + t.bot_answer);
+      L.push('Verdict: ' + (bad ? 'bad' : 'good'));
+      if (bad) L.push('Group: ' + (groupNameById(state.assign[id]) || 'none'));
+      L.push('');
+    });
+  }
+  L.push('REPLY FORMAT'); L.push('Reply with only JSON: {"verdict":"good" or "bad","group":"one group name or none","reason":"one short sentence"}');
+  return L.join('\n');
+}
+
+/* DEMO JUDGE: a simple rule-based checker so every screen can be tried for free. It is NOT an AI judge. */
+var SHEET_NUMS = null;
+function numbersIn(text){
+  var set = new Set(), m = String(text).match(/\d[\d,]*(?:\.\d+)?/g) || [];
+  m.forEach(function(x){ set.add(x.replace(/,/g, '').replace(/^0+(?=\d)/, '')); });
+  return set;
+}
+function sheetNums(){
+  if (!SHEET_NUMS) SHEET_NUMS = numbersIn(JSON.stringify(DATA.fs.tiers) + ' ' + DATA.fs.rules.map(function(r){ return r.text; }).join(' '));
+  return SHEET_NUMS;
+}
+function promptGroups(prompt){
+  var out = [], on = false;
+  prompt.split('\n').forEach(function(l){
+    if (l.indexOf('PROBLEM GROUPS') === 0) { on = true; return; }
+    if (!on) return;
+    if (l.indexOf('- ') === 0) out.push(l.slice(2)); else if (l.trim() === '') on = false;
+  });
+  return out;
+}
+function pickGroup(prompt, kw){
+  var best = null, bs = 0, ks = new Set(kw.map(stem));
+  promptGroups(prompt).forEach(function(nm){
+    var sc = 0; words(nm).map(stem).forEach(function(t){ if (ks.has(t)) sc++; });
+    if (sc > bs) { bs = sc; best = nm; }
+  });
+  return best;
+}
+var RULE_INDEX = null;
+function ruleIndex(){
+  if (!RULE_INDEX) RULE_INDEX = DATA.fs.rules.map(function(r){
+    return { nums: numbersIn(r.text), stems: new Set(content(r.text).map(function(x){ return x.stem; })) };
+  });
+  return RULE_INDEX;
+}
+// For one sentence of an answer: find the fact sheet rules it is about, then check its numbers appear in those rules.
+function sentenceNumbersWrong(sentence, question){
+  var sset = new Set(content(sentence).map(function(x){ return x.stem; }));
+  if (sset.size < 2) return false;
+  var best = [], bs = 1;
+  ruleIndex().forEach(function(r){
+    var sc = 0; sset.forEach(function(t){ if (r.stems.has(t)) sc++; });
+    if (sc > bs) { bs = sc; best = [r]; } else if (sc === bs && sc > 1) best.push(r);
+  });
+  if (!best.length) return false;
+  var qn = numbersIn(question), bad = false;
+  numbersIn(sentence.replace(/\b\d+(st|nd|rd|th)\b/g, '')).forEach(function(n){
+    if (qn.has(n)) return;
+    if (!best.some(function(r){ return r.nums.has(n); })) bad = true;
+  });
+  return bad;
+}
+// Extra rules used only when the instructions contain SENT_MISSED. They read the question, the answer and the fact sheet, never a label.
+function strictFacts(answer, question){
+  var reasons = [], kw = [], al = answer.toLowerCase();
+  var sents = answer.split(/(?<=[.!?])\s+/);
+  if (sents.some(function(x){ return sentenceNumbersWrong(x, question); })) { reasons.push('uses a number that does not match the fact sheet for this topic'); kw.push('number', 'figure', 'wrong', 'limit', 'cap', 'fee', 'time'); }
+  if (/\b(tomorrow|next day|a week|a day or two|by morning|by tonight)\b/.test(al)) { reasons.push('gives a time the fact sheet does not give'); kw.push('time', 'week', 'tomorrow', 'promise', 'refund'); }
+  if (/\b(guarantee[ds]?|you will (have|get) (it|your money|the money) back|will (be )?refunded|will (pull|recover)|i will (check|look|update|link|confirm|enter|transfer|open|resend)|i am transferring|refunds? all|will refund)\b/.test(al)) { reasons.push('promises an action or result the fact sheet does not give'); kw.push('promise', 'refund', 'claim', 'invented', 'unsupported', 'rule'); }
+  return { reasons: reasons, kw: kw };
+}
+function testJudge(prompt, strictness, input){
+  var a = input.answer, al = a.toLowerCase(), reasons = [], kw = [];
+  var refuse = /\b(never|do not|don't|not ask)\b/;
+  if ((/\b(share|type|tell me|send me|reply here|reply with|enter|give me|provide|paste)\b[^.?!]*\b(pin|password|passcode|card number|code)\b/.test(al) && !refuse.test(al)) ||
+      /sometimes[^.?!]*\bask[^.?!]*\b(password|pin|code)\b/.test(al)) {
+    reasons.push('asks for, or allows asking for, secret data'); kw.push('asked', 'code', 'pin', 'password', 'card', 'secret', 'data', 'share');
+  }
+  if (strictness !== 'lenient') {
+    if (/\b(unlimited|forever|for good|permanent|permanently|hidden|guaranteed|never ends)\b/.test(al) || /as many [a-z ]* as you (like|need)/.test(al)) {
+      reasons.push('makes a claim the fact sheet does not support'); kw.push('claim', 'invented', 'unsupported', 'promise', 'rule', 'cap', 'limit');
+    }
+    var calcOk = /calculated numbers are fine/i.test(prompt) && /\b(so|which is|plus|equals|would be|at most)\b/.test(al);
+    if (!calcOk) {
+      var known = sheetNums(), inQ = numbersIn(input.question), bad = false;
+      numbersIn(a).forEach(function(n){ if (!known.has(n) && !inQ.has(n)) bad = true; });
+      if (bad) { reasons.push('uses a number that is not in the fact sheet'); kw.push('number', 'figure', 'wrong', 'limit', 'cap', 'fee', 'time'); }
+    }
+    if (a.split(/\s+/).length <= 22 && !/\d/.test(a) &&
+        /\b(check the app|contact support|please contact|keep an eye|be patient|not able to say|depends? on your account)\b/.test(al)) {
+      reasons.push('sends the user elsewhere without giving information'); kw.push('support', 'app', 'vague', 'pointed', 'generic', 'elsewhere', 'answer');
+    }
+  }
+  if (strictness === 'strict' && /\b(usually|about|around|should|probably|sometimes|tomorrow|a week|a day or two)\b/.test(al)) {
+    reasons.push('uses a vague or unsupported time'); kw.push('time', 'week', 'tomorrow', 'vague', 'hedge');
+  }
+  if (/a number, time or promise that is not in the fact sheet is a fail/i.test(prompt)) {
+    var sf = strictFacts(a, input.question);
+    sf.reasons.forEach(function(x){ reasons.push(x); }); sf.kw.forEach(function(x){ kw.push(x); });
+  }
+  if (!reasons.length) return { verdict: 'pass', group: null, reason: 'Nothing wrong found.' };
+  return { verdict: 'fail', group: pickGroup(prompt, kw), reason: reasons[0].charAt(0).toUpperCase() + reasons[0].slice(1) + '.' };
+}
+function runJudge(ver, ids){
+  var out = {};
+  ids.forEach(function(id){ var r = testJudge(ver.prompt, ver.strictness, judgeInput(id)); out[id] = { verdict: r.verdict, group: r.group, reason: r.reason }; });
+  return out;
+}
+function agreeCount(verdicts, ids, labels){
+  var n = 0; ids.forEach(function(id){ if (verdicts[id] && verdicts[id].verdict === labels[id]) n++; }); return n;
+}
+function curVersion(){ var j = jst(); return j.versions[j.cur] || null; }
+function labelSourceText(ids, sp){
+  var u = 0, sm = 0;
+  ids.forEach(function(id){ if (sp.sources[id] === 'sample') sm++; else u++; });
+  if (!sm) return 'Labels say: your answers.';
+  if (!u) return 'Labels say: sample labels written by the data builder (not your own review).';
+  return 'Labels say: your answers (' + u + ') and sample labels written by the data builder (' + sm + ').';
+}
+function saveVersion(){
+  var j = jst(); if (!j.split || !j.draft.trim()) return;
+  var v = curVersion();
+  if (v && v.prompt === j.draft && v.strictness === j.strictness) return;
+  j.versions.push({ n: j.versions.length + 1, prompt: j.draft, strictness: j.strictness, createdAt: new Date().toISOString(), tuning: null, final: null });
+  j.cur = j.versions.length - 1;
+  save(); renderAll(); say('Saved as version ' + j.versions[j.cur].n + '.');
+}
+
+
+// Two versions are only compared when the same kind of judge (demo or live) produced both runs on the same set.
+function mixedLine(pOld, vNew, set){
+  return 'Version ' + pOld.n + ' was judged by the ' + jn(kindOf(pOld[set])) + ' and version ' + vNew.n + ' by the ' + jn(kindOf(vNew[set])) + ', so they cannot be compared.';
+}
+function historyFor(i){
+  var j = jst(), v = j.versions[i];
+  if (!v || i === 0) return { none: true };
+  var p = j.versions[i - 1];
+  if (!v.tuning || !p.tuning) return { need: true, a: p.n, b: v.n };
+  if (kindOf(v.tuning) !== kindOf(p.tuning)) return { mixed: mixedLine(p, v, 'tuning') };
+  var flips = [];
+  Object.keys(v.tuning.verdicts).forEach(function(id){
+    var x = p.tuning.verdicts[id], y = v.tuning.verdicts[id];
+    if (x && y && x.verdict !== y.verdict) flips.push({ id: id, from: x.verdict, to: y.verdict, truth: j.split.labels[id], right: y.verdict === j.split.labels[id] });
+  });
+  return { flips: flips, a: p.n, b: v.n, total: Object.keys(v.tuning.verdicts).length };
+}
+// "What changed since the last version" in plain words, for screen 3 (Advanced) and screen 4.
+function fillChanges(el, i){
+  var j = jst(), v = j.versions[i], hist = historyFor(i); clear(el);
+  if (hist.none) el.appendChild(h('p', { class: 'muted' }, j.versions.length ? 'This is the first version, so there is nothing to compare yet.' : 'Save two versions and practise on both to see what changed.'));
+  else if (hist.need) el.appendChild(h('p', { class: 'muted' }, 'Run the judge on the tuning set for version ' + hist.a + ' and for version ' + hist.b + ' to see what changed.'));
+  else if (hist.mixed) el.appendChild(h('p', null, hist.mixed));
+  else {
+    var right = hist.flips.filter(function(f){ return f.right; }).length;
+    el.appendChild(h('p', null, 'From version ' + hist.a + ' to version ' + hist.b + ', ' + hist.flips.length + ' of the ' + hist.total + ' practice answers changed. ' + right + ' now match the labels and ' + (hist.flips.length - right) + ' no longer match.'));
+    if (!hist.flips.length) {
+      el.appendChild(h('p', { class: 'muted' }, 'No practice answers changed.'));
+    }
+    hist.flips.forEach(function(f){
+      el.appendChild(h('div', { class: 'noterow', style: 'grid-template-columns:70px minmax(0,1fr)' },
+        h('button', { class: 'idlink', onclick: function(){ traceDetail(f.id, v.tuning.verdicts, j.split, kindOf(v.tuning)); } }, f.id),
+        h('span', null, Jn(kindOf(v.tuning)) + ' said ' + (f.from === 'fail' ? 'bad' : 'good') + ', now says ' + (f.to === 'fail' ? 'bad' : 'good') + '. Labels say ' + (f.truth === 'fail' ? 'bad' : 'good') + ', so it is now ' + (f.right ? 'right' : 'wrong') + '.')));
+    });
+  }
+}
+function lastVersion(){ var j = jst(); return j.versions[j.versions.length - 1] || null; }
+// Plain comparison of a version with the one before it, on the practice set and on the sealed set.
+function cmpSet(vNew, vOld, set){
+  var j = jst(), sp = j.split, a = vOld[set], b = vNew[set];
+  if (!a || !b) return null;
+  if (kindOf(a) !== kindOf(b)) return { mixed: mixedLine(vOld, vNew, set) };
+  var ids = sp.ids[set], flips = [];
+  ids.forEach(function(id){
+    var x = a.verdicts[id], y = b.verdicts[id];
+    if (x && y && x.verdict !== y.verdict) flips.push({ id: id, truth: sp.labels[id], from: x.verdict, to: y.verdict, right: y.verdict === sp.labels[id] });
+  });
+  return { x: agreeCount(a.verdicts, ids, sp.labels), y: agreeCount(b.verdicts, ids, sp.labels), total: ids.length, flips: flips, right: flips.filter(function(f){ return f.right; }).length };
+}
+function cmpBlock(el, label, vNew, vOld, set, noChangeText){
+  var j = jst(), c = cmpSet(vNew, vOld, set);
+  if (!c) { el.appendChild(h('p', null, h('strong', null, label + ': '), 'version ' + vNew.n + ' has not been ' + (set === 'final' ? 'opened on the sealed set yet.' : 'practised yet.'))); return; }
+  if (c.mixed) { if (!el.getAttribute('data-mixed')) { el.setAttribute('data-mixed', '1'); el.appendChild(h('p', null, c.mixed)); } return; }
+  var jk = jn(kindOf(vNew[set]));
+  var first = 'Version ' + vOld.n + ' agreed on ' + c.x + ' of ' + c.total + ', version ' + vNew.n + ' on ' + c.y + ' of ' + c.total + ' (' + jk + ').';
+  var second = c.flips.length ? c.flips.length + (c.flips.length === 1 ? ' answer' : ' answers') + ' changed, ' + c.right + (c.right === 1 ? ' now matches the labels' : ' now match the labels') + (c.flips.length - c.right ? ' and ' + (c.flips.length - c.right === 1 ? '1 no longer matches' : (c.flips.length - c.right) + ' no longer match') : '') + '.' : noChangeText;
+  el.appendChild(h('p', null, h('strong', null, label + ': '), first + ' ' + second));
+  if (c.flips.length) {
+    var runs = vNew[set].verdicts;
+    el.appendChild(h('details', null, h('summary', null, 'Show the ' + c.flips.length + (c.flips.length === 1 ? ' answer' : ' answers') + ' that changed'),
+      c.flips.map(function(f){
+        return h('div', { class: 'noterow', style: 'grid-template-columns:70px minmax(0,1fr)' },
+          h('button', { class: 'idlink', onclick: function(){ traceDetail(f.id, runs, j.split, kindOf(vNew[set])); } }, f.id),
+          h('span', null, Jn(kindOf(vNew[set])) + ' said ' + (f.from === 'fail' ? 'bad' : 'good') + ', now says ' + (f.to === 'fail' ? 'bad' : 'good') + '. Labels say ' + (f.truth === 'fail' ? 'bad' : 'good') + ', so it is now ' + (f.right ? 'right' : 'wrong') + '.'));
+      })));
+  }
+}
+function fillCompare(el, i){
+  var j = jst(), v = j.versions[i], p = j.versions[i - 1]; clear(el); el.removeAttribute('data-mixed');
+  if (!v || !p) return;
+  cmpBlock(el, 'Sealed set', v, p, 'final', 'No sealed answers changed.');
+  cmpBlock(el, 'Practice set', v, p, 'tuning', 'No practice answers changed.');
+}
+var IMPROVE = { sentence: null, key: null };
+function addSentenceAndSave(){
+  var j = jst(), L = lastVersion(), sent = IMPROVE.sentence;
+  if (!j.split || !L || !sent || L.prompt.indexOf(sent) >= 0) return;
+  j.cur = j.versions.length - 1;
+  j.draft = L.prompt.indexOf('HOW TO JUDGE') >= 0 ? L.prompt.replace('HOW TO JUDGE', 'HOW TO JUDGE\n' + sent) : L.prompt + '\n' + sent;
+  j.strictness = L.strictness;
+  saveVersion();
+  runTuning();
+  FIXSEL.vi = j.versions.length - 1; FIXSEL.set = 'tuning';
+  renderAll(); say('Version ' + j.versions.length + ' saved with the sentence added, and practised.');
+}
+function renderJudge(){
+  renderBanner();
+  var j = jst(), gate = $('judgeGate'), body = $('judgeBody'), n = labeledIds().length;
+  clear(gate);
+  if (!state.locked) {
+    gate.appendChild(h('h2', null, 'Lock your groups first'));
+    gate.appendChild(h('p', { class: 'small muted' }, 'The checker\'s instructions are built from your locked groups. Go to screen 2, suggest and tidy your groups, then press Lock groups.'));
+    var g1 = h('button', { onclick: function(){ showScreen('groups'); } }, 'Go to screen 2');
+    gate.appendChild(g1); gate.hidden = false; body.hidden = true; setPrimary(g1); return;
+  }
+  if (n < 30) {
+    gate.appendChild(h('h2', null, 'Label more answers first'));
+    gate.appendChild(h('p', { class: 'small muted' }, 'You need at least 30 labeled answers to split them three ways. You have ' + n + '. Go to screen 1, review more answers, or press Load sample review.'));
+    var g2 = h('button', { onclick: function(){ showScreen('review'); } }, 'Go to screen 1');
+    gate.appendChild(g2); gate.hidden = false; body.hidden = true; setPrimary(g2); return;
+  }
+  // First visit: make the split and save version 1 for the visitor (fixed seed, labels shown below).
+  if (!j.split) { autoSetup(); save(); say('Split made and version 1 saved.'); }
+  gate.hidden = true; body.hidden = false;
+  var sp = j.split, locked = splitLocked(), v = curVersion();
+  $('autoLine').textContent = (j.auto ? 'Set up for you: ' : 'Split made: ') + 'the labeled answers were split ' + sp.ids.examples.length + ' / ' + sp.ids.tuning.length + ' / ' + sp.ids.final.length +
+    ' (examples / practice / sealed) with a fixed seed' + (j.auto ? ', and the checker\'s instructions were saved as version 1' : '') + '. You can change this under Advanced.';
+  $('splitLabels').textContent = labelSourceText(Object.keys(sp.labels), sp);
+  var ss = $('splitSummary'); clear(ss);
+  var rows = [['examples', 'Examples (go into the instructions)'], ['tuning', 'Tuning set (practice)'], ['final', 'Sealed set (final test)']];
+  ss.appendChild(h('div', { style: 'overflow:auto' }, h('table', null,
+    h('thead', null, h('tr', null, h('th', null, 'Part'), h('th', null, 'Answers'), h('th', null, 'Bad answers'), h('th', null, 'Good answers'))),
+    h('tbody', null, rows.map(function(r){
+      var ids = sp.ids[r[0]], bad = ids.filter(function(id){ return sp.labels[id] === 'fail'; }).length;
+      return h('tr', null, h('td', null, r[1]), h('td', null, ids.length), h('td', null, bad), h('td', null, ids.length - bad));
+    })))));
+  $('btnSplit').textContent = 'Make the split again';
+  $('btnSplit').disabled = locked;
+  $('splitNote').textContent = locked ? 'The split is fixed because the judge has been run. Use Start over to begin again.' :
+    (n < 60 ? 'You have fewer than 60 labeled answers, so the results will be rough.' : '');
+  $('sExamples').value = String(j.settings.examplesPct); $('sTuning').value = String(j.settings.tuningPct);
+  $('sFinalPct').textContent = (100 - j.settings.examplesPct - j.settings.tuningPct) + '%';
+  $('sExamples').disabled = $('sTuning').disabled = locked;
+  var vs = $('verSelect'); clear(vs);
+  if (!j.versions.length) vs.appendChild(h('option', { value: '' }, '(no version saved yet)'));
+  j.versions.forEach(function(x, i){ vs.appendChild(h('option', { value: String(i) }, 'Version ' + x.n + ' (' + x.strictness + ')')); });
+  vs.disabled = !j.versions.length; if (j.versions.length) vs.value = String(j.cur);
+  $('verInfo').textContent = v ? 'Saved ' + fmtDate(v.createdAt) + (v.final ? '. Sealed set already opened.' : '.') : '';
+  var ta = $('judgePrompt'); ta.disabled = false; ta.value = j.draft || ''; ta.placeholder = '';
+  var dirty = !v || j.draft !== v.prompt || j.strictness !== v.strictness;
+  $('btnSaveVer').textContent = 'Save as version ' + (j.versions.length + 1);
+  $('btnSaveVer').disabled = !j.draft.trim() || !dirty;
+  $('btnRebuild').disabled = false;
+  $('testStrict').value = j.strictness; $('sMaxEx').value = String(j.settings.maxExamples);
+  $('sMaxEx').disabled = locked;
+  $('btnTuning').disabled = !v || LIVE.busy;
+  $('hA').textContent = 'Step A: Practise (' + (v && v.tuning ? 'done' : 'not done') + ')';
+  $('hB').textContent = 'Step B: Final test (' + (v && v.final ? 'done' : (v && v.tuning ? 'now' : 'waiting')) + ')';
+  if (v && v.tuning) {
+    var a = agreeCount(v.tuning.verdicts, sp.ids.tuning, sp.labels);
+    $('tuningResult').textContent = 'Practice score: the ' + jn(kindOf(v.tuning)) + (kindOf(v.tuning) === 'live' ? ' (' + (v.tuning.model || MODEL) + ')' : ' (simple rules, not AI)') + ' agreed with the labels on ' + a + ' of ' + sp.ids.tuning.length + ' tuning answers (' + pct(a, sp.ids.tuning.length) + '%).';
+  } else $('tuningResult').textContent = v ? 'Not run yet for this version.' : 'No version of the instructions is saved yet. Open Advanced and save one.';
+  $('btnSealed').disabled = !v || !!v.final || LIVE.busy;
+  $('btnToFix').hidden = !(v && v.final);
+  if (v && v.final) {
+    var b = agreeCount(v.final.verdicts, sp.ids.final, sp.labels);
+    $('sealedStatus').textContent = 'Opened on ' + fmtDate(v.final.openedAt) + '. Final score: the ' + jn(kindOf(v.final)) + (kindOf(v.final) === 'live' ? ' (' + (v.final.model || MODEL) + ')' : ' (simple rules, not AI)') + ' agreed with the labels on ' + b + ' of ' + sp.ids.final.length + ' sealed answers (' + pct(b, sp.ids.final.length) + '%). Version ' + v.n + ' cannot be opened again.';
+  } else $('sealedStatus').textContent = v ? 'Not opened yet for version ' + v.n + '.' : '';
+  $('attemptsText').textContent = 'Sealed set opened ' + j.attempts + (j.attempts === 1 ? ' time' : ' times') + ' in total, across ' + j.versions.length + (j.versions.length === 1 ? ' version.' : ' versions.');
+  fillChanges($('fixHistory'), j.cur);
+  var tb = $('logTable').querySelector('tbody'); clear(tb);
+  if (!j.log.length) tb.appendChild(h('tr', null, h('td', { colspan: 5, class: 'muted' }, 'Nothing run yet.')));
+  j.log.forEach(function(l, i){
+    tb.appendChild(h('tr', null, h('td', null, i + 1), h('td', null, 'Version ' + l.version), h('td', null, l.set === 'final' ? 'Sealed final set' : 'Tuning set (practice)'),
+      h('td', null, fmtDate(l.at)), h('td', null, l.failed ? 'Live Claude judge failed after ' + l.calls + ' of ' + l.total + ' calls: ' + l.error + (l.usageKnown ? ' (' + usageText(l) + ' before it stopped)' : '') : Jn(l.kind) + ' agreed on ' + l.agreed + ' of ' + l.total + (l.usageKnown ? ', ' + usageText(l) : ''))));
+  });
+  if (LIVEERR && LIVEERR.set === 'tuning') $('tuningResult').textContent = LIVEERR.text;
+  if (LIVEERR && LIVEERR.set === 'final') $('sealedStatus').textContent = LIVEERR.text;
+  renderLiveBox();
+  setPrimary(primaryJudge());
+}
+/* ---------- live Claude judge: paid, off by default, needs a key, a tick box and two confirm windows. It was built but never run in any test. ---------- */
+var LIVE = { on: false, key: '', busy: false };   // memory only: never saved, never exported
+var LIVEERR = null;
+// Assumed prices in dollars per million tokens, deliberately wide, only used for the rough cost range shown before a run.
+var PRICE = { inLow: 0.25, inHigh: 5, outLow: 1.25, outHigh: 25 };
+var INTRO_DEMO = 'An automatic checker (called a judge) reads a question and the bot answer, then says good or bad. The demo judge follows simple rules, so nothing is paid for and nothing is sent anywhere. A real AI judge can be switched on later. It only ever sees the question and the bot answer, and its numbers are demo numbers, not a real result.';
+function renderModelChips(){
+  document.querySelectorAll('.judgechip').forEach(function(e){ e.textContent = LIVE.on ? 'Live judge model: ' + MODEL : 'Real AI judge model, not switched on: ' + MODEL; });
+}
+// The payload for one answer: the instructions plus the question and the bot answer. Never a label for that answer.
+function liveBody(prompt, input){
+  return { model: MODEL, max_tokens: 2000, system: prompt, messages: [{ role: 'user', content: 'Question: ' + input.question + '\nBot answer: ' + input.answer }] };
+}
+function liveCost(v, ids){
+  var tin = 0;
+  ids.forEach(function(id){ var i = judgeInput(id); tin += Math.ceil((v.prompt.length + i.question.length + i.answer.length + 40) / 4); });
+  var tout = ids.length * 600;   // about 600 output tokens per call, because the model may think before it answers
+  return { calls: ids.length, low: (tin * PRICE.inLow + tout * PRICE.outLow) / 1e6, high: (tin * PRICE.inHigh + tout * PRICE.outHigh) / 1e6 };
+}
+function money(x){ return x < 0.01 ? 'under $0.01' : '$' + x.toFixed(2); }
+// Reading the reply: look for a JSON object with a verdict anywhere in the text. A code fence, text before or after it, and other braces are all fine.
+function matchBrace(t, start){
+  var depth = 0, inStr = false, esc = false;
+  for (var k = start; k < t.length; k++) {
+    var c = t.charAt(k);
+    if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; }
+    else if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}') { depth--; if (depth === 0) return k; }
+  }
+  return -1;
+}
+function findVerdictObject(text){
+  var t = String(text), sawBrace = false, sawObject = false;
+  for (var i = 0; i < t.length; i++) {
+    if (t.charAt(i) !== '{') continue;
+    sawBrace = true;
+    var end = matchBrace(t, i); if (end < 0) continue;
+    var o; try { o = JSON.parse(t.slice(i, end + 1)); } catch (e) { continue; }
+    if (o && typeof o === 'object' && !Array.isArray(o)) { sawObject = true; if (Object.prototype.hasOwnProperty.call(o, 'verdict')) return { obj: o }; }
+  }
+  return { obj: null, sawBrace: sawBrace, sawObject: sawObject };
+}
+function parseLiveReply(text, groupNames){
+  var f = findVerdictObject(text);
+  if (!f.obj) throw new Error(!f.sawBrace ? 'The reply was not in the expected format (no JSON found).' : (f.sawObject ? 'The reply had JSON but no verdict field.' : 'The reply was not valid JSON.'));
+  var o = f.obj, vd = String(o.verdict || '').toLowerCase();
+  if (vd !== 'good' && vd !== 'bad') throw new Error('The reply had no clear verdict (expected good or bad).');
+  var g = typeof o.group === 'string' && groupNames.indexOf(o.group) >= 0 ? o.group : null;
+  return { verdict: vd === 'bad' ? 'fail' : 'pass', group: vd === 'bad' ? g : null, reason: String(o.reason || '').slice(0, 200) };
+}
+// Only text blocks count. Other blocks (for example thinking) are ignored.
+function liveText(content){
+  return (Array.isArray(content) ? content : []).filter(function(b){ return b && b.type === 'text' && typeof b.text === 'string'; }).map(function(b){ return b.text; }).join('\n');
+}
+function liveTypes(content){
+  return (Array.isArray(content) ? content : []).map(function(b){ return b && b.type ? String(b.type) : 'unknown'; });
+}
+// The key is never shown, even if some service text were to echo it.
+function scrubKey(s){ var k = LIVE.key; s = String(s); return k && k.length >= 8 ? s.split(k).join('[key hidden]') : s; }
+function replyDetails(j, text){
+  var types = liveTypes(j && j.content);
+  return ' Stop reason: ' + ((j && j.stop_reason) || 'not given') + '. Content block types: ' + (types.length ? types.join(', ') : 'none') + '. First 300 characters of the reply text: ' + (text ? JSON.stringify(text.slice(0, 300)) : '(no text blocks)') + '.';
+}
+function liveCall(v, input){
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': LIVE.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify(liveBody(v.prompt, input))
+  }).then(function(r){
+    return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }, function(){ return { ok: r.ok, status: r.status, j: null }; });
+  }, function(e){ throw new Error('Could not reach Anthropic: ' + scrubKey(e.message) + '.'); }).then(function(res){
+    if (!res.ok) throw new Error('Anthropic replied with an error (HTTP ' + res.status + '): ' + scrubKey((res.j && res.j.error && res.j.error.message) || 'no message') + '.');
+    var j = res.j || {}, text = liveText(j.content);
+    try { var rr = parseLiveReply(text, promptGroups(v.prompt)); rr.usage = j.usage; return rr; }
+    catch (pe) {
+      var cut = j.stop_reason === 'max_tokens';
+      var perr = new Error((cut ? 'The reply was cut off because it reached the length limit (stop reason max_tokens), so the JSON is incomplete. ' : '') + pe.message + replyDetails(j, text));
+      perr.usage = j.usage; throw perr;
+    }
+  });
+}
+// One call at a time. Stops at the first error. No retries.
+function addUsage(tot, u){
+  if (!u || typeof u !== 'object') return;
+  var i = Number(u.input_tokens), o = Number(u.output_tokens);
+  if (isFinite(i)) { tot.in += i; tot.known = true; }
+  if (isFinite(o)) { tot.out += o; tot.known = true; }
+}
+function usageOf(u){ return { in: u && u.known ? u.in : 0, out: u && u.known ? u.out : 0, known: !!(u && u.known) }; }
+function usageText(l){ return l.usageKnown ? 'used ' + l.usageIn.toLocaleString('en-US') + ' input and ' + l.usageOut.toLocaleString('en-US') + ' output tokens' : ''; }
+// One call at a time. Stops at the first error. No retries. Adds up the usage numbers when the replies carry them.
+function runLiveJudge(v, ids, onStep){
+  var out = {}, done = 0, tot = { in: 0, out: 0, known: false };
+  return new Promise(function(resolve, reject){
+    (function next(){
+      if (done >= ids.length) { resolve({ verdicts: out, usage: tot }); return; }
+      var id = ids[done];
+      liveCall(v, judgeInput(id)).then(function(r){ out[id] = { verdict: r.verdict, group: r.group, reason: r.reason }; addUsage(tot, r.usage); done++; onStep(done, ids.length); next(); },
+        function(e){ e.calls = done; addUsage(tot, e.usage); e.totals = tot; reject(e); });
+    })();
+  });
+}
+function liveDialog1Nodes(v, ids, setLabel, sampleId){
+  var cost = liveCost(v, ids);
+  return [
+    'This will make ' + cost.calls + ' paid calls to Anthropic with the model ' + MODEL + ', one after another, using your own key, on the ' + setLabel + '.',
+    'Rough cost range: ' + money(cost.low) + ' to ' + money(cost.high) + '. This is only a guess from the size of the instructions and the answers, about 600 output tokens per call, and wide assumed prices ($' + PRICE.inLow + ' to $' + PRICE.inHigh + ' per million input tokens and $' + PRICE.outLow + ' to $' + PRICE.outHigh + ' per million output tokens). Check your own price list.',
+    'The model may think before it answers, and this thinking is billed as output.',
+    'Only the question, the bot answer and the instructions are sent. No label is sent. The instructions contain worked examples with their verdicts, taken only from the examples part.',
+    'Exact payload for one answer, in the same shape every call uses:',
+    h('pre', { style: 'max-height:220px;overflow:auto;white-space:pre-wrap;font-size:.75rem;background:var(--surface2);padding:8px;border-radius:8px' }, JSON.stringify(liveBody(v.prompt, judgeInput(sampleId)), null, 2))
+  ];
+}
+function liveStep2(v, ids, onGo){
+  ask('Live Claude judge: step 2 of 2', ['Last check. ' + ids.length + ' calls will be sent now, one after another. It stops at the first error and never retries on its own. Send them?'], 'Send ' + ids.length + ' calls', onGo);
+}
+function finishTuning(v, verdicts, kind, usage){
+  var j = jst(), now = new Date().toISOString(), ids = j.split.ids.tuning;
+  v.tuning = { ranAt: now, verdicts: verdicts, kind: kind, model: kind === 'live' ? MODEL : null };
+  j.log.push({ version: v.n, set: 'tuning', at: now, agreed: agreeCount(verdicts, ids, j.split.labels), total: ids.length, kind: kind, failed: false, error: '', calls: ids.length, usageIn: usageOf(usage).in, usageOut: usageOf(usage).out, usageKnown: usageOf(usage).known });
+  LIVEERR = null; save(); renderAll(); say('Practice run finished for version ' + v.n + '.');
+}
+function finishSealed(v, verdicts, kind, usage){
+  var j = jst(), now = new Date().toISOString(), ids = j.split.ids.final;
+  v.final = { openedAt: now, verdicts: verdicts, kind: kind, model: kind === 'live' ? MODEL : null };
+  j.log.push({ version: v.n, set: 'final', at: now, agreed: agreeCount(verdicts, ids, j.split.labels), total: ids.length, kind: kind, failed: false, error: '', calls: ids.length, usageIn: usageOf(usage).in, usageOut: usageOf(usage).out, usageKnown: usageOf(usage).known });
+  j.attempts = j.log.filter(function(l){ return l.set === 'final'; }).length;
+  FIXSEL.vi = j.versions.indexOf(v); FIXSEL.set = 'final';
+  LIVEERR = null; save(); renderAll(); say('Sealed set opened for version ' + v.n + '.');
+}
+function failLive(v, set, err){
+  var j = jst(), now = new Date().toISOString(), ids = j.split.ids[set];
+  j.log.push({ version: v.n, set: set, at: now, agreed: 0, total: ids.length, kind: 'live', failed: true, error: scrubKey(String(err.message || err)).slice(0, 900), calls: err.calls || 0, usageIn: usageOf(err.totals).in, usageOut: usageOf(err.totals).out, usageKnown: usageOf(err.totals).known });
+  j.attempts = j.log.filter(function(l){ return l.set === 'final'; }).length;
+  LIVEERR = { set: set, text: 'The live Claude judge stopped after ' + (err.calls || 0) + ' of ' + ids.length + ' calls. ' + scrubKey(String(err.message || err)) + ' Nothing from this run was saved' + (set === 'final' ? ', but this opening of the sealed set was counted.' : '.') };
+  save(); renderAll();
+}
+function liveRun(v, ids, set){
+  LIVE.busy = true; LIVEERR = null; renderAll();
+  function prog(n, t){ var el = set === 'final' ? $('sealedStatus') : $('tuningResult'); if (el) el.textContent = 'Live Claude judge: call ' + n + ' of ' + t + '...'; }
+  prog(0, ids.length);
+  runLiveJudge(v, ids, prog).then(function(res){ LIVE.busy = false; if (set === 'final') finishSealed(v, res.verdicts, 'live', res.usage); else finishTuning(v, res.verdicts, 'live', res.usage); },
+    function(err){ LIVE.busy = false; failLive(v, set, err); });
+}
+function runTuning(){
+  var j = jst(), v = curVersion(); if (!v || !j.split || LIVE.busy) return;
+  var ids = j.split.ids.tuning;
+  if (!LIVE.on) { finishTuning(v, runJudge(v, ids), 'demo'); return; }
+  ask('Live Claude judge: step 1 of 2', liveDialog1Nodes(v, ids, 'practice (tuning) set', ids[0]), 'Continue', function(){ liveStep2(v, ids, function(){ liveRun(v, ids, 'tuning'); }); });
+}
+function openSealed(){
+  var j = jst(), v = curVersion();
+  if (!v || !j.split || v.final || LIVE.busy) return;
+  var ids = j.split.ids.final, live = LIVE.on;
+  var body = ['This is opening number ' + (j.attempts + 1) + ' in total. Version ' + v.n + ' cannot be opened again.', 'The ' + jn(live ? 'live' : 'demo') + ' will run on ' + ids.length + ' sealed answers it has never seen.'];
+  // The example shown in the confirm window is a practice answer, so no sealed answer is shown before you accept.
+  if (live) body = body.concat(['If the live run fails part way, this opening is still counted and nothing from it is saved.'], liveDialog1Nodes(v, ids, 'sealed set', j.split.ids.tuning[0]));
+  ask('Open the sealed set for version ' + v.n + '?', body, live ? 'Continue' : 'Open it', function(){
+    if (v.final) return;
+    if (live) liveStep2(v, ids, function(){ if (!v.final) liveRun(v, ids, 'final'); });
+    else finishSealed(v, runJudge(v, ids), 'demo');
+  });
+}
+function renderLiveBox(){
+  var v = curVersion(), j = jst();
+  $('ljState').textContent = LIVE.on ? 'The live judge is on. The key is held in memory only. Model: ' + MODEL + '.' : 'The live judge is off, so the demo judge is used.';
+  $('btnLiveOn').hidden = LIVE.on; $('btnLiveOff').hidden = !LIVE.on; $('ljKey').disabled = LIVE.on; $('ljOk').disabled = LIVE.on;
+  $('btnLiveOn').disabled = LIVE.on || $('ljKey').value.trim().length < 20 || !$('ljOk').checked;
+  $('ljPayload').value = (v && j.split) ? JSON.stringify(liveBody(v.prompt, judgeInput(j.split.ids.tuning[0])), null, 2) : '';
+  $('badge3').textContent = LIVE.on ? 'LIVE CLAUDE JUDGE is on (paid calls)' : 'DEMO JUDGE, simple rules, not AI';
+  $('badge3').className = LIVE.on ? 'badge' : 'testbadge';
+  $('judgeIntro').textContent = LIVE.on ? 'The live Claude judge is switched on, so the practice and the final test make paid calls with your key. Only the question, the bot answer and the instructions are sent, and you see the number of calls and a rough cost range first.' : INTRO_DEMO;
+}
+function liveSwitchOn(){
+  var k = $('ljKey').value.trim();
+  if (LIVE.on || k.length < 20 || !$('ljOk').checked) return;
+  LIVE.key = k; LIVE.on = true; $('ljKey').value = ''; $('ljOk').checked = false;
+  renderAll(); say('The live Claude judge is on.');
+}
+function liveSwitchOff(){ LIVE.on = false; LIVE.key = ''; LIVEERR = null; renderAll(); say('The live Claude judge is off and the key was forgotten.'); }
+
+/* ---------- screen 4: four boxes (demo judge versus the labels), the improve step, and one agreement score ---------- */
+var FIXSEL = { vi: null, set: null };
+function confusion(verdicts, ids, labels){
+  var c = { both_bad: [], too_strict: [], missed: [], both_good: [] };
+  ids.forEach(function(id){
+    var jv = verdicts[id].verdict, hv = labels[id];
+    if (jv === 'fail' && hv === 'fail') c.both_bad.push(id);
+    else if (jv === 'fail') c.too_strict.push(id);
+    else if (hv === 'fail') c.missed.push(id);
+    else c.both_good.push(id);
+  });
+  return c;
+}
+function kappa(a, b, c, d){
+  var n = a + b + c + d; if (!n) return null;
+  var po = (a + d) / n, pe = ((a + b) * (a + c) + (c + d) * (b + d)) / (n * n);
+  if (pe === 1) return null;
+  return (po - pe) / (1 - pe);
+}
+function kappaBand(k){
+  // Scale of Landis and Koch (1977), applied to the score rounded to two decimals so the word always matches the number shown.
+  var r = Math.round(k * 100) / 100;
+  if (r < 0) return 'poor (worse than chance)';
+  if (r <= 0.20) return 'slight';
+  if (r <= 0.40) return 'fair';
+  if (r <= 0.60) return 'moderate';
+  if (r <= 0.80) return 'substantial';
+  return 'almost perfect';
+}
+function traceDetail(id, verdicts, sp, kind){
+  var t = DATA.byId[id], r = state.reviews[id], vd = verdicts[id];
+  var body = [
+    h('p', null, h('strong', null, 'Question: '), t.user_question),
+    h('p', null, h('strong', null, 'Bot answer: '), t.bot_answer),
+    h('p', null, h('strong', null, 'Question type: '), qTypeWords(id)),
+    myGroup(id, sp) ? h('p', null, h('strong', null, 'Your problem group: '), myGroup(id, sp)) : null,
+    h('p', null, h('strong', null, 'Labels say: '), (sp.labels[id] === 'fail' ? 'bad answer' : 'good answer') + ' (source: ' + (sp.sources[id] === 'sample' ? 'sample label written by the data builder' : 'your own answer') + ')' + (r && r.note ? '. Note: ' + r.note : '')),
+    h('p', null, h('strong', null, Jn(kind) + (kind === 'live' ? ' (' + MODEL + ')' : ' (simple rules, not AI)') + ' said: '), (vd.verdict === 'fail' ? 'bad' : 'good') + '. ' + vd.reason + (vd.group ? " Judge's group: " + vd.group + '.' : ''))
+  ];
+  ask('Conversation ' + id, body, 'Close', null, true);
+}
+function qTypeWords(id){ var q = DATA.byId[id].question_type; return ({ direct_fact: 'simple fact question', process: 'how-to question', edge_case: 'tricky situation' })[q] || q; }
+function myGroup(id, sp){ return sp.labels[id] === 'fail' ? (groupNameById(state.assign[id]) || '(not placed in a group)') : null; }
+var BOXES = [
+  { key: 'both_bad', cls: 'bot', title: 'Both say bad', who: 'Judge: bad. Labels say: bad. (Confirmed system failure)', action: 'Fix the chatbot. The judge and the labels agree these answers are bad.' },
+  { key: 'too_strict', cls: 'judge', title: 'Judge too strict', who: 'Judge: bad. Labels say: good. (Over-strict judge)', action: 'Fix the judge. It calls these answers bad but the labels say they are fine, so look for instructions that are too harsh.' },
+  { key: 'missed', cls: 'judge', title: 'Judge missed it', who: 'Judge: good. Labels say: bad. (Missed by judge)', action: 'Fix the judge. It lets these bad answers through, so add the missing problem to its instructions or examples.' },
+  { key: 'both_good', cls: 'ok', title: 'Both say good', who: 'Judge: good. Labels say: good.', action: 'Nothing to fix here.' }
+];
+function topGroup(key, ids, verdicts){
+  if (key === 'both_good' || !ids.length) return null;
+  var cnt = {};
+  ids.forEach(function(id){
+    var nm = key === 'too_strict' ? (verdicts[id].group || '(none named by the judge)') : (groupNameById(state.assign[id]) || '(not placed in a group)');
+    cnt[nm] = (cnt[nm] || 0) + 1;
+  });
+  var best = Object.keys(cnt).sort(function(a, b){ return cnt[b] - cnt[a] || (a < b ? -1 : 1); })[0];
+  return { name: best, count: cnt[best] };
+}
+function topGroupLine(key, ids, verdicts, kind){
+  var t = topGroup(key, ids, verdicts); if (!t) return null;
+  return 'Most common problem group: ' + t.name + ' (' + t.count + ' of ' + ids.length + ')' + (key === 'too_strict' ? ', named by the ' + jn(kind) : '') + '.';
+}
+// One plain sentence about what to do next, based on the biggest problem box. Plain code, not Claude.
+function nextAdvice(c, verdicts){
+  var cands = [['both_bad', c.both_bad], ['missed', c.missed], ['too_strict', c.too_strict]], best = null;
+  cands.forEach(function(x){ if (x[1].length && (!best || x[1].length > best[1].length)) best = x; });
+  if (!best) return { text: 'No problems found in these answers, so there is nothing to fix here.', mode: 'download', key: null, n: 0 };
+  var k = best[0], n = best[1].length;
+  if (k === 'both_bad') {
+    var tg = topGroup('both_bad', best[1], verdicts);
+    return { text: 'The biggest problem is real chatbot failures (' + n + ' answers). Next, fix the chatbot' + (tg && tg.name.charAt(0) !== '(' ? ', starting with the problem group "' + tg.name + '"' : '') + '.', mode: 'download', key: k, n: n };
+  }
+  if (k === 'missed') return { text: 'The biggest problem is that the demo judge lets bad answers through (' + n + ' answers). Next, improve the checker.', mode: 'improve', key: k, n: n };
+  return { text: 'The biggest problem is that the demo judge is too strict (' + n + ' answers). Next, improve the checker.', mode: 'improve', key: k, n: n };
+}
+var MEANING = { both_bad: 'real chatbot problems, so the next action is to fix the chatbot', missed: 'the judge lets bad answers through, so the next action is to improve the checker', too_strict: 'the judge flags answers that are fine, so the next action is to improve the checker' };
+function boxTitle(key){ return BOXES.filter(function(b){ return b.key === key; })[0].title; }
+function renderFix(){
+  renderBanner();
+  var j = jst(), empty = $('fixEmpty'), body = $('fixBody'), vsel = $('fixVersion'), ssel = $('fixSet');
+  var opts = j.versions.map(function(x, i){ return { i: i, v: x }; }).filter(function(o){ return o.v.tuning || o.v.final; });
+  clear(empty); clear(vsel); clear(ssel);
+  if (!j.split || !opts.length) {
+    empty.appendChild(h('p', null, 'Nothing to show yet. Run the judge on screen 3 first.'));
+    var e1 = h('button', { onclick: function(){ showScreen('judge'); } }, 'Go to screen 3');
+    empty.appendChild(e1);
+    empty.hidden = false; body.hidden = true; vsel.disabled = ssel.disabled = true; $('fixLabels').textContent = ''; FIXGUIDE = 'Nothing has been run yet, so there are no boxes to show. Press this to go back and run the judge.'; FIXMODE = 'done'; setPrimary(e1); return;
+  }
+  empty.hidden = true; body.hidden = false; vsel.disabled = ssel.disabled = false;
+  if (!opts.some(function(o){ return o.i === FIXSEL.vi; })) { var last = opts[opts.length - 1]; FIXSEL.vi = last.i; FIXSEL.set = last.v.final ? 'final' : 'tuning'; }
+  var v = j.versions[FIXSEL.vi];
+  if (FIXSEL.set === 'final' && !v.final) FIXSEL.set = 'tuning';
+  if (FIXSEL.set === 'tuning' && !v.tuning) FIXSEL.set = 'final';
+  opts.forEach(function(o){ vsel.appendChild(h('option', { value: String(o.i) }, 'Version ' + o.v.n)); });
+  vsel.value = String(FIXSEL.vi);
+  ssel.appendChild(h('option', { value: 'tuning', disabled: !v.tuning }, 'Tuning set (practice)'));
+  ssel.appendChild(h('option', { value: 'final', disabled: !v.final }, 'Sealed set (final test)'));
+  ssel.value = FIXSEL.set;
+  var run = v[FIXSEL.set], sp = j.split, rk = kindOf(run);
+  $('badge4').textContent = rk === 'live' ? 'LIVE CLAUDE JUDGE, ' + (run.model || MODEL) : 'DEMO JUDGE, simple rules, not AI';
+  $('badge4').className = rk === 'live' ? 'badge' : 'testbadge';
+  $('fixNote').textContent = rk === 'live' ? 'These numbers come from the live Claude judge, a real AI judge, run once on this small synthetic set, so they are not a general result.' : 'These numbers come from the demo judge, which follows simple rules and is not AI, so do not read them as a real result.';
+  var ids = sp.ids[FIXSEL.set].filter(function(id){ return run.verdicts[id]; });
+  $('fixLabels').textContent = labelSourceText(ids, sp) + ' ' + ids.length + ' answers, ' + (FIXSEL.set === 'final' ? 'sealed final set' : 'tuning set (practice)') + ', version ' + v.n + '.';
+  var c = confusion(run.verdicts, ids, sp.labels), N = ids.length;
+  function box(def){
+    var list = c[def.key], tg = topGroupLine(def.key, list, run.verdicts, rk);
+    return h('div', { class: 'box ' + def.cls, id: 'box-' + def.key },
+      h('h3', null, def.title),
+      h('p', { class: 'small muted', style: 'margin:0 0 6px' }, def.who),
+      h('div', { class: 'big' }, String(list.length)),
+      h('p', { class: 'small', style: 'margin:0 0 6px' }, pct(list.length, N) + '% of ' + N + ' answers, counted by the ' + jn(rk)),
+      tg ? h('p', { class: 'small', style: 'margin:0 0 6px' }, tg) : null,
+      h('p', { class: 'small', style: 'margin:0' }, h('strong', null, 'Suggested action: '), def.action),
+      h('p', { class: 'note-hint', style: 'margin:2px 0 0' }, '(plain-code text, not written by Claude)'),
+      list.length ? h('details', null, h('summary', null, 'Show the ' + list.length + (list.length === 1 ? ' answer' : ' answers')),
+        h('div', { class: 'idlist' }, list.map(function(id){ var g = myGroup(id, sp); return h('div', { style: 'display:flex;gap:8px;align-items:center;margin:2px 0' }, h('button', { onclick: function(){ traceDetail(id, run.verdicts, sp, rk); } }, id), h('span', { class: 'small' }, qTypeWords(id)), g ? h('span', { class: 'small muted' }, g) : null); }))) : null);
+  }
+  var m = $('matrix'); clear(m);
+  m.appendChild(h('div', { class: 'axis' }, ''));
+  m.appendChild(h('div', { class: 'axis' }, 'Labels say: bad answer'));
+  m.appendChild(h('div', { class: 'axis' }, 'Labels say: good answer'));
+  m.appendChild(h('div', { class: 'axis' }, 'Judge says: bad'));
+  m.appendChild(box(BOXES[0])); m.appendChild(box(BOXES[1]));
+  m.appendChild(h('div', { class: 'axis' }, 'Judge says: good'));
+  m.appendChild(box(BOXES[2])); m.appendChild(box(BOXES[3]));
+  // What to do next follows the newest version, not the box set being viewed. It must always agree with the blue button.
+  var L = lastVersion(), prev = j.versions[j.versions.length - 2] || null;
+  var Dset = L.final ? 'final' : 'tuning', Drun = L[Dset], cD = null, advD = null, cP = null, Dk = kindOf(Drun);
+  if (Drun) {
+    cD = confusion(Drun.verdicts, sp.ids[Dset].filter(function(id){ return Drun.verdicts[id]; }), sp.labels);
+    advD = nextAdvice(cD, Drun.verdicts);
+    if (prev && prev[Dset] && kindOf(prev[Dset]) === Dk) cP = confusion(prev[Dset].verdicts, sp.ids[Dset].filter(function(id){ return prev[Dset].verdicts[id]; }), sp.labels);
+  }
+  var snt = (advD && L.final) ? improveSentenceFor(advD.key) : null;
+  if (!L.tuning && !L.final) FIXMODE = 'back3';
+  else if (!L.final) FIXMODE = 'final2';
+  else if (snt && L.prompt.indexOf(snt) < 0) FIXMODE = 'improve';
+  else FIXMODE = 'done';
+  IMPROVE = { sentence: FIXMODE === 'improve' ? snt : null, key: advD ? advD.key : null };
+  var setName = Dset === 'final' ? 'sealed set' : 'practice set', plural = function(n, one, many){ return n + ' ' + (n === 1 ? one : many); };
+  var still = cD ? cD.missed.length : 0, stillPrev = cP ? cP.missed.length : null;
+  var thrText = (still === 1 ? '1 bad answer still gets through' : still + ' bad answers still get through') + (stillPrev !== null ? ' (version ' + prev.n + ': ' + stillPrev + ')' : '');
+  var strictText = cD ? 'the ' + jn(Dk) + ' wrongly flags ' + plural(cD.too_strict.length, 'good answer', 'good answers') + (cP ? ' (version ' + prev.n + ': ' + cP.too_strict.length + ')' : '') : '';
+  var nextTxt;
+  if (FIXMODE === 'back3') nextTxt = 'Version ' + L.n + ' has not been practised yet. Next, go back to screen 3 and practise it.';
+  else if (FIXMODE === 'final2') nextTxt = 'On the practice set of version ' + L.n + ', ' + thrText + '. Next, run the final test for version ' + L.n + ', which gets its own single look at the sealed set.';
+  else if (FIXMODE === 'improve') nextTxt = 'On the sealed set of version ' + L.n + ', ' + (advD.key === 'missed' ? thrText : strictText) + '. Next, add the sentence above and save it as version ' + (j.versions.length + 1) + ', or download your work now.';
+  else if (!advD || !advD.key) nextTxt = 'No problems found on the ' + setName + ' of version ' + L.n + '. You can download your work.';
+  else if (advD.key === 'both_bad') {
+    var tg = topGroup('both_bad', cD.both_bad, Drun.verdicts);
+    nextTxt = 'On the ' + setName + ' of version ' + L.n + ', the biggest problem is real chatbot failures (' + plural(cD.both_bad.length, 'answer', 'answers') + ')' + (still ? ', and ' + thrText : '') + '. Next, fix the chatbot' + (tg && tg.name.charAt(0) !== '(' ? ', starting with the problem group "' + tg.name + '"' : '') + ', then download your work.';
+  } else nextTxt = 'On the ' + setName + ' of version ' + L.n + ', ' + (advD.key === 'missed' ? thrText : strictText) + '. No further fix is offered here, so download your work.';
+  $('nextSentence').textContent = nextTxt;
+  var ic = $('improveCard'); ic.hidden = FIXMODE === 'done' && j.versions.length < 2;
+  $('btnAddSave').hidden = FIXMODE !== 'improve'; $('btnAddSave').textContent = 'Add it and save as version ' + (j.versions.length + 1);
+  $('btnFinal2').hidden = FIXMODE !== 'final2'; $('btnFinal2').textContent = 'Run the final test for version ' + L.n;
+  $('btnBack3').hidden = FIXMODE !== 'back3';
+  var shown = IMPROVE.sentence || (prev ? newSentence(L, prev) : null) || '';
+  $('improveSentence').textContent = shown; $('improveSentence').parentNode.hidden = !shown;
+  var how = Dk === 'live' ? 'The live Claude judge reads the sentence below as part of its instructions, so adding it asks it to ' : 'The demo judge follows simple rules and reacts to the sentence below, so adding it to the instructions should make it ';
+  $('improveText').textContent = FIXMODE === 'improve' ? 'You can improve the checker in one step. ' + how + (IMPROVE.key === 'missed' ? (Dk === 'live' ? 'catch more invented numbers, times and promises.' : 'catch more invented numbers, times and promises.') : (Dk === 'live' ? 'flag fewer good answers.' : 'flag fewer good answers.')) :
+    (FIXMODE === 'back3' ? 'Version ' + L.n + ' has not been practised yet. Go back to screen 3 to practise it.' :
+    'Version ' + L.n + ' was saved' + (shown ? ' with the sentence above added' : '') + ', and the practice was run again. The comparison is below.');
+  $('improveNote').textContent = Dk === 'live' ? 'A real AI judge responds to this sentence in its own way, so the next test shows what it actually does.' : 'The demo judge reacts to these sentences so the loop can be shown. A real AI judge would respond in its own way.';
+  var le = $('liveErr4'); le.hidden = !LIVEERR; le.textContent = LIVEERR ? LIVEERR.text : '';
+  $('cmpHeading').hidden = j.versions.length < 2;
+  if (j.versions.length >= 2) fillCompare($('changedMain'), j.versions.length - 1); else clear($('changedMain'));
+  var biggest = advD && advD.key ? 'The biggest problem box is "' + boxTitle(advD.key) + '" (' + advD.n + ' answers)' : null;
+  if (FIXMODE === 'improve') FIXGUIDE = 'On the sealed set of version ' + L.n + ', ' + (advD.key === 'missed' ? thrText : strictText) + '. Press this to add the sentence ' + (Dk === 'live' ? 'to the live judge instructions' : 'the demo judge reacts to') + ' and save it as version ' + (j.versions.length + 1) + ', then the practice runs again.';
+  else if (FIXMODE === 'final2') FIXGUIDE = 'Version ' + L.n + ' practice score (' + jn(kindOf(L.tuning)) + '): ' + judgeScore(L.tuning, 'tuning') + (prev && prev.tuning ? ', and version ' + prev.n + ' scored ' + judgeScore(prev.tuning, 'tuning') + ' (' + jn(kindOf(prev.tuning)) + ')' : '') + '. Press this for the final test, because version ' + L.n + ' gets its own single look at the sealed set, to check the score was not luck.';
+  else if (FIXMODE === 'back3') FIXGUIDE = 'Version ' + L.n + ' has not been practised yet. Press this to go back to screen 3 and practise it.';
+  else if (!biggest) FIXGUIDE = 'No problem boxes have answers. Press this to download your work.';
+  else if (advD.key === 'both_bad') FIXGUIDE = biggest + ': ' + MEANING.both_bad + '. Press this to download your work.';
+  else FIXGUIDE = biggest + ' and no further fix is offered. Press this to download your work.';
+  setPrimary(FIXMODE === 'improve' ? $('btnAddSave') : (FIXMODE === 'final2' ? $('btnFinal2') : (FIXMODE === 'back3' ? $('btnBack3') : $('btnNext4'))));
+  var k = kappa(c.both_bad.length, c.too_strict.length, c.missed.length, c.both_good.length), kc = $('kappaCard'); clear(kc);
+  kc.appendChild(h('h2', null, 'Agreement score (' + jn(rk) + ')'));
+  if (k === null) kc.appendChild(h('p', null, 'The agreement score (kappa) cannot be worked out here, because the ' + jn(rk) + ' and the labels put every answer in the same class, so there is nothing to compare.'));
+  else {
+    var kr = (Math.round(k * 100) / 100).toFixed(2);
+    kc.appendChild(h('div', { style: 'font-size:1.8rem;font-weight:700' }, kr + ' ', h('span', { class: 'small muted', style: 'font-size:.85rem;font-weight:400' }, '(' + jn(rk) + ')')));
+    kc.appendChild(h('p', null, 'Agreement score (kappa): ' + kr + ', ' + kappaBand(k) + '. It shows how often the ' + jn(rk) + ' and the labels agree after taking away the agreement you would get by pure luck: 1 is perfect and 0 is no better than luck.'));
+    kc.appendChild(h('p', { class: 'note-hint' }, 'Scale (Landis and Koch, 1977), used on the score rounded to two decimals: below 0 poor, 0.00 to 0.20 slight, 0.21 to 0.40 fair, 0.41 to 0.60 moderate, 0.61 to 0.80 substantial, 0.81 to 1.00 almost perfect.'));
+  }
+  renderDetailed(v, run, FIXSEL.set, ids, c, rk, sp);
+}
+
+/* ---------- screen 4: Detailed scores (closed by default): MCC switch, bootstrap ranges, corrected pass rate, error costs, ship gate, per-box detail ---------- */
+var BOOT_SEED = 20251029, BOOT_REPS = 2000;
+var QTYPE = { direct_fact: 'simple fact questions', process: 'how-to questions', edge_case: 'tricky situations' };
+function mcc(tp, fp, fn, tn){
+  var d = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+  return d ? (tp * tn - fp * fn) / d : null;
+}
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function mean(a){ if (!a.length) return null; var t = 0; a.forEach(function(x){ t += x; }); return t / a.length; }
+function f2(x){ return x === null || x === undefined || !isFinite(x) ? 'not available' : (Math.round(x * 100) / 100).toFixed(2); }
+function pctT(x){ return x === null || x === undefined || !isFinite(x) ? 'not available' : Math.round(x * 100) + '%'; }
+// Seeded bootstrap: the same data always gives the same range.
+function bootRange(draw, seed, reps){
+  var rng = mulberry32(seed), vals = [];
+  for (var r = 0; r < reps; r++) { var x = draw(rng); if (x !== null && isFinite(x)) vals.push(x); }
+  if (vals.length < reps * 0.5) return null;
+  vals.sort(function(a, b){ return a - b; });
+  return { lo: vals[Math.floor(0.025 * (vals.length - 1))], hi: vals[Math.ceil(0.975 * (vals.length - 1))], used: vals.length };
+}
+function agreementUsed(c, det){
+  var tp = c.both_bad.length, fp = c.too_strict.length, fn = c.missed.length, tn = c.both_good.length, n = tp + fp + fn + tn;
+  var bad = tp + fn, good = fp + tn, share = n ? Math.max(bad, good) / n : 0, lops = n > 0 && share * 100 >= det.lopsided;
+  var k = kappa(tp, fp, fn, tn), m = mcc(tp, fp, fn, tn);
+  return { n: n, share: share, lopsided: lops, majority: bad >= good ? 'bad' : 'good', kappa: k, mcc: m, name: lops ? 'MCC' : 'kappa', value: lops ? m : k };
+}
+function pairRates(prs){
+  var lp = 0, jpLp = 0, lf = 0, jfLf = 0;
+  prs.forEach(function(p){ if (p[0]) { lp++; if (p[1]) jpLp++; } else { lf++; if (!p[1]) jfLf++; } });
+  return { tpr: lp ? jpLp / lp : null, tnr: lf ? jfLf / lf : null };
+}
+// Rogan-Gladen: (observed + TNR - 1) / (TPR + TNR - 1). TPR and TNR come from the sealed set; observed is the judge pass rate on the tuning set, treated as unlabeled.
+function correctedRate(v, sp){
+  if (!v.tuning || !v.final) return null;
+  var tun = sp.ids.tuning.filter(function(id){ return v.tuning.verdicts[id]; }), fin = sp.ids.final.filter(function(id){ return v.final.verdicts[id]; });
+  var tPass = tun.map(function(id){ return v.tuning.verdicts[id].verdict === 'pass' ? 1 : 0; });
+  var pairs = fin.map(function(id){ return [sp.labels[id] === 'pass' ? 1 : 0, v.final.verdicts[id].verdict === 'pass' ? 1 : 0]; });
+  var r = pairRates(pairs), obs = mean(tPass), m = tPass.length, n = pairs.length;
+  var den = (r.tpr === null || r.tnr === null) ? 0 : r.tpr + r.tnr - 1;
+  var point = den > 0.0001 ? clamp01((obs + r.tnr - 1) / den) : null;
+  var passRange = bootRange(function(rng){ var t = 0, i; for (i = 0; i < m; i++) t += tPass[Math.floor(rng() * m)]; return t / m; }, BOOT_SEED, BOOT_REPS);
+  var corrRange = bootRange(function(rng){
+    var prs = [], i; for (i = 0; i < n; i++) prs.push(pairs[Math.floor(rng() * n)]);
+    var rr = pairRates(prs); if (rr.tpr === null || rr.tnr === null) return null;
+    var d = rr.tpr + rr.tnr - 1; if (d <= 0.05) return null;
+    var t = 0; for (i = 0; i < m; i++) t += tPass[Math.floor(rng() * m)];
+    return clamp01((t / m + rr.tnr - 1) / d);
+  }, BOOT_SEED + 1, BOOT_REPS);
+  return { obs: obs, tpr: r.tpr, tnr: r.tnr, point: point, human: mean(tun.map(function(id){ return sp.labels[id] === 'pass' ? 1 : 0; })), passRange: passRange, corrRange: corrRange, m: m, n: n };
+}
+function expectedCost(c, det){
+  var over = c.too_strict.length, missed = c.missed.length, n = over + missed + c.both_bad.length + c.both_good.length;
+  var total = over * det.costOver + missed * det.costMissed;
+  return { over: over, missed: missed, total: total, per100: n ? total / n * 100 : 0, n: n };
+}
+function shipGate(v, sp, det, corr){
+  var lines = [];
+  if (!v.final) {
+    ['Agreement on the sealed set', 'Corrected pass rate lower bound', 'Sealed set opened exactly once', 'Enough sealed answers', 'Cost within budget'].forEach(function(t){ lines.push({ ok: false, text: t + ': the sealed set has not been opened for this version yet.' }); });
+    return lines;
+  }
+  var ids = sp.ids.final.filter(function(id){ return v.final.verdicts[id]; }), cF = confusion(v.final.verdicts, ids, sp.labels), ag = agreementUsed(cF, det), ec = expectedCost(cF, det);
+  var opens = jst().log.filter(function(l){ return l.set === 'final' && l.version === v.n; }).length;
+  lines.push({ ok: ag.value !== null && ag.value >= det.minAgree, text: 'Agreement on the sealed set is ' + ag.name + ' ' + f2(ag.value) + ', and the limit is at least ' + f2(det.minAgree) + '.' });
+  var lo = corr && corr.corrRange ? corr.corrRange.lo : null;
+  lines.push({ ok: lo !== null && lo >= det.minLower, text: lo === null ? 'The corrected pass rate range cannot be worked out here, so this line is not passed.' : 'The lower bound of the corrected pass rate is ' + pctT(lo) + ', and the limit is at least ' + pctT(det.minLower) + '.' });
+  lines.push({ ok: opens === 1, text: opens === 1 ? 'The sealed set was opened exactly once for version ' + v.n + '.' : 'The sealed set was opened ' + opens + ' times for version ' + v.n + ' (failed tries count), and it must be exactly once.' });
+  lines.push({ ok: ids.length >= det.minSealed, text: 'There are ' + ids.length + ' sealed answers, and the limit is at least ' + det.minSealed + '.' });
+  lines.push({ ok: ec.per100 <= det.budget, text: 'The expected cost is ' + (Math.round(ec.per100 * 10) / 10) + ' points per 100 answers, and the budget is ' + det.budget + '.' });
+  return lines;
+}
+function boxDetailRows(c, run, ids){
+  var tot = {}; ids.forEach(function(id){ var t = DATA.byId[id].question_type; tot[t] = (tot[t] || 0) + 1; });
+  return BOXES.map(function(def){
+    var list = c[def.key];
+    if (def.key === 'both_good' || !list.length) return { def: def, none: true, empty: !list.length && def.key !== 'both_good' };
+    var by = {}; list.forEach(function(id){ var t = DATA.byId[id].question_type; by[t] = (by[t] || 0) + 1; });
+    var best = null;
+    Object.keys(by).sort().forEach(function(t){ var r = by[t] / tot[t]; if (!best || r > best.r || (r === best.r && by[t] > best.n)) best = { t: t, n: by[t], tot: tot[t], r: r }; });
+    return { def: def, best: best, tg: topGroup(def.key, list, run.verdicts), size: list.length };
+  });
+}
+function renderDetailed(v, run, set, ids, c, rk, sp){
+  var det = jst().detail, root = $('detailBody'), jnm = jn(rk), setName = (set === 'final' ? 'sealed set' : 'practice set') + ', ' + jnm;
+  clear(root);
+  function sec(title){ root.appendChild(h('h3', { style: 'margin-top:16px' }, title)); }
+  function line(text){ root.appendChild(h('p', { class: 'small', style: 'margin:4px 0' }, text)); }
+  root.appendChild(h('p', { class: 'note-hint', style: 'margin:0' }, 'Based on version ' + v.n + '. The ' + jnm + ' results are ' + (rk === 'live' ? 'from a real AI judge on this small synthetic set, not a general result.' : 'demo numbers, not a real result.') + ' (plain-code text, not written by Claude)'));
+  // agreement
+  var ag = agreementUsed(c, det);
+  sec('Agreement score (' + setName + ')');
+  line(ag.lopsided
+    ? 'Score used: MCC ' + f2(ag.mcc) + ' (kappa would be ' + f2(ag.kappa) + '). Labels are lopsided, ' + Math.round(ag.share * 100) + '% say ' + ag.majority + ', which is at or above the ' + det.lopsided + '% limit, so MCC is used because kappa can mislead when one answer type dominates.'
+    : 'Score used: kappa ' + f2(ag.kappa) + ' (MCC would be ' + f2(ag.mcc) + '). Labels are not lopsided, ' + Math.round(ag.share * 100) + '% say ' + ag.majority + ', which is under the ' + det.lopsided + '% limit, so kappa is used.');
+  // pass rates
+  var corr = correctedRate(v, sp);
+  sec('Pass rate and corrected pass rate (' + jnm + ')');
+  if (!corr) line('Needs a practice run and an opened sealed set for this version. Practise and run the final test first.');
+  else {
+    line('Pass rate the ' + jnm + ' gives on the practice (tuning) set: ' + pctT(corr.obs) + (corr.passRange ? ' (range ' + pctT(corr.passRange.lo) + ' to ' + pctT(corr.passRange.hi) + ', seeded bootstrap of ' + BOOT_REPS.toLocaleString('en-US') + ' resamples).' : '.'));
+    line('Corrected pass rate (Rogan-Gladen): ' + pctT(corr.point) + (corr.corrRange ? ' (range ' + pctT(corr.corrRange.lo) + ' to ' + pctT(corr.corrRange.hi) + ').' : '.') + ' It is (observed + TNR - 1) / (TPR + TNR - 1), with TPR ' + f2(corr.tpr) + ' and TNR ' + f2(corr.tnr) + ' taken from the sealed set and applied to the practice set pass rate, treated as unlabeled.');
+    line('Demo check: the true pass rate from the labels on the practice set is ' + pctT(corr.human) + '. We only know it because this is a demo.');
+  }
+  // costs
+  var ec = expectedCost(c, det);
+  sec('Error costs (' + setName + ')');
+  line(ec.over + (ec.over === 1 ? ' over-strict answer' : ' over-strict answers') + ' at ' + det.costOver + ' each, plus ' + ec.missed + (ec.missed === 1 ? ' missed failure' : ' missed failures') + ' at ' + det.costMissed + ' each, gives an expected cost of ' + (Math.round(ec.total * 10) / 10) + ' points, which is ' + (Math.round(ec.per100 * 10) / 10) + ' points per 100 answers.');
+  // ship gate
+  var gate = shipGate(v, sp, det, corr), okN = gate.filter(function(g){ return g.ok; }).length;
+  sec('Ship gate (sealed set of version ' + v.n + ', ' + jn(kindOf(v.final)) + ')');
+  gate.forEach(function(g){ root.appendChild(h('p', { class: 'small', style: 'margin:4px 0' }, h('span', { class: 'flag ' + (g.ok ? 'ok' : 'bad'), style: 'margin:0 8px 0 0' }, g.ok ? 'pass' : 'not yet'), g.text)); });
+  line(okN === gate.length ? 'All ' + gate.length + ' lines pass, so this version is ready to ship on these demo numbers.' : okN + ' of ' + gate.length + ' lines pass, so the answer is not yet.');
+  // per box
+  sec('Per box (' + setName + ')');
+  boxDetailRows(c, run, ids).forEach(function(r){
+    if (r.none) { line(r.def.title + ': ' + (r.empty ? 'no answers in this box.' : 'nothing to explain, these are the answers with no problem.')); return; }
+    var share = r.tg ? ' The top problem group, ' + r.tg.name + ', explains ' + r.tg.count + ' of ' + r.size + ' (' + pctT(r.tg.count / r.size) + ').' : '';
+    line(r.def.title + ': the weakest question type is ' + QTYPE[r.best.t] + ', with ' + r.best.n + ' of ' + r.best.tot + ' of them in this box (' + pctT(r.best.r) + ').' + share);
+  });
+  // editable settings
+  sec('Edit the limits');
+  function ni(label, key, min, max, step){
+    return h('div', { style: 'min-width:150px' }, h('label', { style: 'font-weight:400;font-size:.85rem' }, label),
+      h('input', { type: 'number', min: String(min), max: String(max), step: String(step), value: String(det[key]), 'aria-label': label,
+        onchange: function(ev){ det[key] = num(ev.target.value, min, max, det[key]); save(); renderFix(); } }));
+  }
+  root.appendChild(h('div', { class: 'row' },
+    ni('Lopsided labels from (percent)', 'lopsided', 50, 99, 1), ni('Cost per over-strict answer', 'costOver', 0, 1000, 0.5), ni('Cost per missed failure', 'costMissed', 0, 1000, 0.5),
+    ni('Agreement at least', 'minAgree', 0, 1, 0.05), ni('Corrected pass rate lower bound at least', 'minLower', 0, 1, 0.05), ni('Sealed answers at least', 'minSealed', 1, 500, 1), ni('Cost budget per 100 answers', 'budget', 0, 100000, 5)));
+}
+
+/* ---------- download, load and start over ---------- */
+function doExport(){
+  var out = { app: 'faultline', version: 1, exportedAt: new Date().toISOString(), factsheet_version: DATA.fs.version,
+    settings: state.settings, reviews: state.reviews, groups: state.groups, assign: state.assign, locked: state.locked, lockedAt: state.lockedAt, judge: state.judge };
+  var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  var a = h('a', { href: URL.createObjectURL(blob), download: 'faultline-state.json' });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  say('Your work was downloaded.');
+}
+function doImport(file){
+  var rd = new FileReader();
+  rd.onload = function(){
+    try {
+      var obj = JSON.parse(String(rd.result));
+      if (!obj || obj.app !== 'faultline') throw new Error('Not a FaultLine export');
+      var s = sanitize(obj);
+      var known = {}; DATA.traces.forEach(function(t){ known[t.id] = true; });
+      Object.keys(s.reviews).forEach(function(id){ if (!known[id]) delete s.reviews[id]; });
+      ask('Load saved work?', 'This replaces your current answers and groups with ' + Object.keys(s.reviews).length + ' answers and ' + s.groups.length + ' groups from the file.', 'Load', function(){
+        state = s; DRAFT = {}; EDIT = new Set(); save(); renderAll(); say('Saved work loaded.');
+      });
+    } catch (e) { $('loadError').textContent = 'Could not load that file: ' + e.message; $('loadError').hidden = false; setTimeout(function(){ $('loadError').hidden = true; }, 5000); }
+  };
+  rd.readAsText(file);
+}
+function doReset(){
+  ask('Start over?', 'This deletes all your answers, groups and settings stored in this browser. Download your work first if you want a copy.', 'Start over', function(){
+    state = defaults(); DRAFT = {}; EDIT = new Set();
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    pos = 0; showScreen('start'); say('Started over.');
+  });
+}
+
+/* ---------- wiring: connect buttons to the code above ---------- */
+function renderReview(){
+  renderBanner(); renderProgress(); renderTrace(); renderGrid(); renderChart(); updateNextStep();
+}
+function renderAll(){
+  renderBanner();
+  if (!$('screen-start').hidden) renderStart();
+  if (!$('screen-review').hidden) renderReview();
+  if (!$('screen-groups').hidden) renderGroups();
+  if (!$('screen-judge').hidden) renderJudge();
+  if (!$('screen-fix').hidden) renderFix();
+}
+function wire(){
+  document.querySelectorAll('button.tab[data-screen]').forEach(function(b){ b.addEventListener('click', function(){ showScreen(b.getAttribute('data-screen')); }); });
+  $('btnPass').addEventListener('click', function(){ chooseLabel('pass'); });
+  $('btnFail').addEventListener('click', function(){ chooseLabel('fail'); });
+  $('noteInput').addEventListener('input', function(ev){
+    var id = currentId(), d = getDraft(id); d.note = ev.target.value; state.drafts[id] = { label: d.label, note: d.note }; save(); updateCommitState();
+  });
+  $('noteInput').addEventListener('keydown', function(ev){ if (ev.key === 'Enter' && !$('btnCommit').disabled) { ev.preventDefault(); commitCall(); } });
+  $('btnCommit').addEventListener('click', commitCall);
+  $('btnEdit').addEventListener('click', startEdit);
+  $('btnCancelEdit').addEventListener('click', cancelEdit);
+  $('btnPrev').addEventListener('click', function(){ go(pos - 1); });
+  $('btnNext').addEventListener('click', function(){ go(pos + 1); });
+  $('btnNextUn').addEventListener('click', nextUnreviewed);
+  $('btnSample').addEventListener('click', loadSample);
+  $('ruleFilter').addEventListener('input', filterRules);
+  $('overlapRange').addEventListener('input', function(ev){ state.settings.overlap = Number(ev.target.value); save(); renderChart(); });
+  $('btnMock').addEventListener('click', proposeMock);
+  $('btnNewGroup').addEventListener('click', addGroup);
+  $('mockK').addEventListener('change', function(ev){ state.settings.mockK = Math.round(num(ev.target.value, 2, 20, 8)); save(); renderGroups(); });
+  $('btnLock').addEventListener('click', lockGroups);
+  $('btnUnlock').addEventListener('click', unlockGroups);
+  $('sMinGroup').addEventListener('change', function(ev){ state.settings.minGroup = Math.round(num(ev.target.value, 1, 20, 3)); save(); renderGroups(); });
+  $('sMinName').addEventListener('change', function(ev){ state.settings.minNameWords = Math.round(num(ev.target.value, 1, 6, 2)); save(); renderGroups(); });
+  $('sMinNote').addEventListener('change', function(ev){ state.settings.minNoteWords = Math.round(num(ev.target.value, 1, 6, 2)); save(); renderGroups(); renderChart(); });
+  $('sVague').addEventListener('change', function(ev){ state.settings.vague = ev.target.value.slice(0, 3000); save(); renderGroups(); renderChart(); });
+  $('btnVagueReset').addEventListener('click', function(){ state.settings.vague = DEF_VAGUE; save(); renderGroups(); renderChart(); });
+  $('liveKey').addEventListener('input', updateLivePayload);
+  $('liveOk').addEventListener('change', updateLivePayload);
+  $('btnLive').addEventListener('click', liveAsk);
+  $('btnExport').addEventListener('click', doExport);
+  $('fileImport').addEventListener('change', function(ev){ if (ev.target.files[0]) doImport(ev.target.files[0]); ev.target.value = ''; });
+  $('btnReset').addEventListener('click', doReset);
+  $('dlgNo').addEventListener('click', closeDlg);
+  $('dlgYes').addEventListener('click', function(){ var f = dlgYesHandler; closeDlg(); if (f) f(); });
+  document.addEventListener('keydown', function(ev){
+    if ($('screen-review').hidden || $('dlg').open) return;
+    var tg = ev.target && ev.target.tagName;
+    if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+    if (ev.key === 'ArrowLeft') go(pos - 1);
+    if (ev.key === 'ArrowRight') go(pos + 1);
+  });
+  $('btnSplit').addEventListener('click', function(){
+    if (splitLocked()) return;
+    autoSetup(); save(); renderJudge(); say('Split made and version 1 saved.');
+  });
+  $('sExamples').addEventListener('change', function(ev){
+    var st = jst().settings; if (splitLocked()) return;
+    st.examplesPct = Math.round(num(ev.target.value, 0, 60, 20)); if (st.examplesPct + st.tuningPct > 90) st.tuningPct = 90 - st.examplesPct; save(); renderJudge();
+  });
+  $('sTuning').addEventListener('change', function(ev){
+    var st = jst().settings; if (splitLocked()) return;
+    st.tuningPct = Math.round(num(ev.target.value, 10, 80, 40)); if (st.examplesPct + st.tuningPct > 90) st.tuningPct = 90 - st.examplesPct; save(); renderJudge();
+  });
+  $('sMaxEx').addEventListener('change', function(ev){ if (splitLocked()) return; jst().settings.maxExamples = Math.round(num(ev.target.value, 0, 20, 8)); save(); renderJudge(); });
+  $('verSelect').addEventListener('change', function(ev){
+    var j = jst(), i = Number(ev.target.value);
+    if (!j.versions[i]) return;
+    j.cur = i; j.draft = j.versions[i].prompt; j.strictness = j.versions[i].strictness; save(); renderJudge();
+  });
+  $('judgePrompt').addEventListener('input', function(ev){
+    var j = jst(), v = curVersion(); j.draft = ev.target.value.slice(0, 20000); save();
+    $('btnSaveVer').disabled = !j.split || !j.draft.trim() || !!(v && j.draft === v.prompt && j.strictness === v.strictness);
+    setPrimary(primaryJudge());
+  });
+  $('testStrict').addEventListener('change', function(ev){
+    var j = jst(), v = curVersion(); if (STRICT.indexOf(ev.target.value) < 0) return;
+    j.strictness = ev.target.value; save();
+    $('btnSaveVer').disabled = !j.split || !j.draft.trim() || !!(v && j.draft === v.prompt && j.strictness === v.strictness);
+    setPrimary(primaryJudge());
+  });
+  $('btnSaveVer').addEventListener('click', saveVersion);
+  $('btnRebuild').addEventListener('click', function(){ var j = jst(); if (!j.split) return; j.draft = buildPrompt(); save(); renderJudge(); });
+  $('btnTuning').addEventListener('click', runTuning);
+  $('btnSealed').addEventListener('click', openSealed);
+  $('fixVersion').addEventListener('change', function(ev){ FIXSEL.vi = Number(ev.target.value); var v = jst().versions[FIXSEL.vi]; FIXSEL.set = v && v.final ? 'final' : 'tuning'; renderFix(); });
+  $('fixSet').addEventListener('change', function(ev){ FIXSEL.set = ev.target.value; renderFix(); });
+  document.querySelectorAll('button.help').forEach(function(b){ b.addEventListener('click', function(){ showHelp(b.getAttribute('data-help')); }); });
+  $('btnTour').addEventListener('click', startTour);
+  $('btnSkip').addEventListener('click', function(){ state.seenStart = true; save(); showScreen('review'); });
+  $('btnStartLink').addEventListener('click', function(){ showScreen('start'); });
+  $('btnLeaveTour').addEventListener('click', function(){ state.tour = false; save(); renderTour(); });
+  $('btnNextStep').addEventListener('click', function(){ showScreen('groups'); });
+  $('btnBack2').addEventListener('click', function(){ showScreen('review'); });
+  $('btnToJudge').addEventListener('click', function(){ showScreen('judge'); });
+  $('btnToFix').addEventListener('click', function(){ showScreen('fix'); });
+  $('btnNext4').addEventListener('click', doExport);
+  $('btnAddSave').addEventListener('click', addSentenceAndSave);
+  $('btnFinal2').addEventListener('click', function(){ var j = jst(); j.cur = j.versions.length - 1; openSealed(); });
+  $('btnBack3').addEventListener('click', function(){ showScreen('judge'); });
+  $('ljKey').addEventListener('input', renderLiveBox);
+  $('ljOk').addEventListener('change', renderLiveBox);
+  $('btnLiveOn').addEventListener('click', liveSwitchOn);
+  $('btnLiveOff').addEventListener('click', liveSwitchOff);
+  window.addEventListener('hashchange', function(){ showScreen(location.hash.replace('#', '')); });
+}
+
+function init(){
+  wire();
+  document.querySelectorAll('.modelname').forEach(function(e){ e.textContent = MODEL; });
+  Promise.all([
+    fetch('data/factsheet.json', { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error('factsheet ' + r.status); return r.json(); }),
+    fetch('data/traces.json', { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error('traces ' + r.status); return r.json(); })
+  ]).then(function(res){
+    DATA.fs = res[0]; DATA.traces = res[1].traces; DATA.guideline = String(res[1].labeling_guideline || '');
+    DATA.traces.forEach(function(t){ DATA.byId[t.id] = t; });
+    order = seededOrder(DATA.traces.map(function(t){ return t.id; }));
+    state = loadSaved() || defaults();
+    Object.keys(state.reviews).forEach(function(id){ if (!DATA.byId[id]) delete state.reviews[id]; });
+    renderFactSheet();
+    var first = order.findIndex(function(id){ return !state.reviews[id]; });
+    pos = first < 0 ? 0 : first;
+    showScreen(location.hash.replace('#', '') || (state.seenStart ? 'review' : 'start'));
+  }).catch(function(e){
+    var b = $('loadError');
+    b.textContent = 'Could not load the data files (' + e.message + '). Open this page through a local web server, for example run "python -m http.server" in the project folder and visit http://localhost:8000/demo.html. Opening the file directly does not work.';
+    b.hidden = false;
+  });
+}
+// Read-only helpers so the local tests can check the maths and what the judge is given.
+window.FaultLineTest = { kappa: kappa, kappaBand: kappaBand, judgeInput: judgeInput, mcc: mcc, bootRange: bootRange, parseLiveReply: parseLiveReply, liveBody: liveBody, liveCost: liveCost };
+init();
+})();
+</script>
+</body>
+</html>
